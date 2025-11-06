@@ -1569,18 +1569,22 @@ def create_sidebar():
         "seo_focus": seo_focus
     }
 
-def show_progress(message, step, total_steps):
-    """Show animated progress indicator"""
-    progress = step / total_steps
-    st.markdown(f"""
-    <div class="progress-container">
-        <h3>🪶 {message}</h3>
-        <p>Step {step} of {total_steps}</p>
+def show_progress():
+    """Initialize progress tracking"""
+    if 'progress_bar' not in st.session_state:
+        progress_placeholder = st.empty()
+        progress_bar = st.progress(0)
+        st.session_state.progress_placeholder = progress_placeholder
+        st.session_state.progress_bar = progress_bar
+
+def update_progress(message, progress):
+    """Update progress bar and message"""
+    st.session_state.progress_placeholder.markdown(f"""
+    <div class="progress-container" style="margin-bottom: 0px;">
+        <h3 style="margin-bottom: 0px;">🪶 {message}</h3>
     </div>
     """, unsafe_allow_html=True)
-    
-    progress_bar = st.progress(progress)
-    return progress_bar
+    st.session_state.progress_bar.progress(progress)
 
 def display_seo_metrics(seo_data):
     """Display SEO metrics in a beautiful grid"""
@@ -1603,8 +1607,22 @@ def display_seo_metrics(seo_data):
     
     st.markdown('</div>', unsafe_allow_html=True)
 
+def initialize_session_state():
+    """Initialize session state variables"""
+    if 'article_data' not in st.session_state:
+        st.session_state.article_data = None
+    if 'seo_data' not in st.session_state:
+        st.session_state.seo_data = None
+    if 'images_data' not in st.session_state:
+        st.session_state.images_data = None
+    if 'exporter_instance' not in st.session_state:
+        st.session_state.exporter_instance = None
+
 def main():
     """Main application function"""
+    
+    # Initialize session state
+    initialize_session_state()
     
     # Load custom styling
     load_custom_css()
@@ -1645,9 +1663,11 @@ def main():
             return
         
         try:
-            # Step 1: Content Analysis
-            progress_bar = show_progress("Analyzing content and keywords...", 1, 6)
+            # Initialize progress tracking
+            show_progress()
             
+            # Step 1: Content Analysis
+            update_progress("Analyzing content and preparing outline...", 0.15)
             if config["url_input"]:
                 # URL analysis mode
                 url_context = content_tools.extract_url_content(config["url_input"])
@@ -1655,12 +1675,8 @@ def main():
             else:
                 context = f"Keywords: {config['keywords']}"
             
-            progress_bar.progress(1/6)
-            time.sleep(1)
-            
             # Step 2: Generate Article Structure
-            show_progress("Creating article structure...", 2, 6)
-            
+            update_progress("Generating article content with GPT-4...", 0.35)
             article_data = llm_engine.generate_article(
                 context=context,
                 keywords=config["keywords"],
@@ -1673,87 +1689,69 @@ def main():
                 seo_focus=config["seo_focus"]
             )
             
-            progress_bar.progress(2/6)
-            time.sleep(1)
-            
             # Step 3: SEO Optimization
-            show_progress("Optimizing for SEO...", 3, 6)
-            
+            update_progress("Optimizing content for search engines...", 0.55)
             seo_data = seo_tools.optimize_content(
                 article_data,
                 keywords=config["keywords"],
                 focus_keyword=config["keywords"].split(",")[0] if config["keywords"] else None
             )
             
-            progress_bar.progress(3/6)
-            time.sleep(1)
-            
             # Step 4: Generate Images
             if config["include_images"] and image_engine:
-                show_progress("Generating AI images with DALL-E 3...", 4, 6)
-                
+                update_progress("Creating AI-powered images with DALL-E 3...", 0.75)
                 images = image_engine.generate_images(
                     article_data,
                     tone=config["tone"]
                 )
                 
-                # Show image generation summary
-                if images:
-                    stats = image_engine.get_image_stats(images)
-                    generated_count = stats['generated_count']
-                    placeholder_count = stats['placeholder_count']
-                    
-                    if generated_count == len(images):
-                        st.success(f"🎨 Successfully generated {generated_count} AI images with DALL-E 3!")
-                    elif generated_count > 0:
-                        st.warning(f"🎨 Generated {generated_count} AI images, {placeholder_count} placeholders (DALL-E temporarily unavailable)")
-                    else:
-                        st.info("🖼️ Using placeholder images (DALL-E temporarily unavailable)")
-                
-                progress_bar.progress(4/6)
-                time.sleep(1)
+                # Note: Image generation summary will be shown in the final content
             else:
                 images = {}
             
-            # Step 5: Content Enhancement
-            show_progress("Enhancing content with links...", 5, 6)
-            
+            # Step 5: Final Enhancement
+            update_progress("Enhancing and finalizing content...", 0.90)
             enhanced_content = content_tools.enhance_content(
                 article_data,
                 internal_links=config["internal_links"],
                 seo_data=seo_data
             )
             
-            progress_bar.progress(5/6)
-            time.sleep(1)
+            # Complete
+            update_progress("Article generation complete!", 1.0)
             
-            # Step 6: Final Processing
-            show_progress("Finalizing your masterpiece...", 6, 6)
+            # Store results in session state
+            st.session_state.article_data = enhanced_content
+            st.session_state.seo_data = seo_data
+            st.session_state.images_data = images
+            st.session_state.exporter_instance = exporter
             
-            progress_bar.progress(1.0)
-            time.sleep(1)
-            
-            # Clear progress indicators
-            st.empty()
-            
-            # Display results
+            # Clear progress indicators and show success
+            st.session_state.progress_placeholder.empty()
+            st.session_state.progress_bar.empty()
             st.success("🎉 Article generated successfully!")
-            
-            # Display content directly after generation
-            display_generated_content(enhanced_content, seo_data, images, exporter)
             
         except Exception as e:
             st.error(f"❌ An error occurred: {str(e)}")
             st.info("Please check your API keys and try again.")
     
-def display_generated_content(enhanced_content, seo_data, images, exporter):
-    """Display the generated content in tabs"""
-    if not enhanced_content:
+    # Display content if available in session state
+    if st.session_state.article_data is not None:
+        display_generated_content()
+    
+def display_generated_content():
+    """Display the generated content in tabs using session state data"""
+    if not st.session_state.article_data:
         return
 
     # Create tabs for different views
     tabs = ["📖 Preview", "📊 SEO Data", "💻 HTML View", "📥 Export"]
     current_tabs = st.tabs(tabs)
+    
+    enhanced_content = st.session_state.article_data
+    seo_data = st.session_state.seo_data
+    images = st.session_state.images_data
+    exporter = st.session_state.exporter_instance
         
     with current_tabs[0]:
         # Article preview
@@ -1881,21 +1879,26 @@ def display_generated_content(enhanced_content, seo_data, images, exporter):
             # On-demand file generation to prevent browser issues
             st.info("Click buttons below to generate files. This prevents automatic generation that can cause page refresh issues.")
             
+            # Initialize variables
+            html_content = None
+            docx_file = None
+            analytics_data = None
+            
             # Generate HTML
-            try:
-                html_content = exporter.generate_html(enhanced_content, seo_data, images)
-                html_filename = f"article_{timestamp}.html"
-            except Exception as e:
-                st.error(f"Error generating HTML: {e}")
-                html_content = None
+            with st.spinner("Generating HTML file..."):
+                try:
+                    html_content = exporter.generate_html(enhanced_content, seo_data, images)
+                    html_filename = f"article_{timestamp}.html"
+                except Exception as e:
+                    st.error(f"Error generating HTML: {e}")
             
             # Generate DOCX
-            try:
-                docx_file = exporter.generate_docx(enhanced_content, seo_data, images)
-                docx_filename = f"article_{timestamp}.docx"
-            except Exception as e:
-                st.error(f"Error generating DOCX: {e}")
-                docx_file = None
+            with st.spinner("Generating Word document..."):
+                try:
+                    docx_file = exporter.generate_docx(enhanced_content, seo_data, images)
+                    docx_filename = f"article_{timestamp}.docx"
+                except Exception as e:
+                    st.error(f"Error generating DOCX: {e}")
             
             # Generate Analytics
             try:
@@ -1904,45 +1907,45 @@ def display_generated_content(enhanced_content, seo_data, images, exporter):
             except Exception as e:
                 st.error(f"Error generating analytics: {e}")
                 analytics_data = None
-                
-                # Create download buttons
-                col1, col2, col3 = st.columns(3)
-                
-                with col1:
-                    if docx_file:
-                        st.download_button(
-                            label="� Download Word Document",
-                            data=docx_file,
-                            file_name=docx_filename,
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            key="download_docx"
-                        )
-                    else:
-                        st.error("DOCX generation failed")
-                
-                with col2:
-                    if html_content:
-                        st.download_button(
-                            label="🌐 Download HTML File",
-                            data=html_content,
-                            file_name=html_filename,
-                            mime="text/html",
-                            key="download_html"
-                        )
-                    else:
-                        st.error("HTML generation failed")
-                
-                with col3:
-                    if analytics_data:
-                        st.download_button(
-                            label="� Download Analytics JSON",
-                            data=analytics_data,
-                            file_name=analytics_filename,
-                            mime="application/json",
-                            key="download_analytics"
-                        )
-                    else:
-                        st.error("Analytics generation failed")
+            
+            # Create download buttons
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                if docx_file:
+                    st.download_button(
+                        label="📄 Download Word Document",
+                        data=docx_file,
+                        file_name=docx_filename,
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        key="download_docx"
+                    )
+                else:
+                    st.error("DOCX generation failed")
+            
+            with col2:
+                if html_content:
+                    st.download_button(
+                        label="🌐 Download HTML File",
+                        data=html_content,
+                        file_name=html_filename,
+                        mime="text/html",
+                        key="download_html"
+                    )
+                else:
+                    st.error("HTML generation failed")
+            
+            with col3:
+                if analytics_data:
+                    st.download_button(
+                        label="📊 Download Analytics JSON",
+                        data=analytics_data,
+                        file_name=analytics_filename,
+                        mime="application/json",
+                        key="download_analytics"
+                    )
+                else:
+                    st.error("Analytics generation failed")
             
         else:
             st.info("No export options available. Generate an article first.")
