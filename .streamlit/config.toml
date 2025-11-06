@@ -1,0 +1,78 @@
+# Streamlit configuration file
+# https://docs.streamlit.io/library/advanced-features/configuration
+
+[global]
+# Development mode
+developmentMode = false
+
+# Show warning when running in development mode
+showWarningOnDirectExecution = false
+
+[server]
+# Port to run the server on
+port = 8501
+
+# Host to bind to
+address = "localhost"
+
+# Enable CORS
+enableCORS = true
+
+# Enable XSS protection
+enableXsrfProtection = true
+
+# Max upload size (in MB)
+maxUploadSize = 200
+
+# Max message size (in MB)
+maxMessageSize = 200
+
+[browser]
+# Automatically open browser when starting Streamlit
+gatherUsageStats = false
+
+# Server address for browser to connect to
+serverAddress = "localhost"
+
+# Server port for browser to connect to
+serverPort = 8501
+
+[theme]
+# Primary color for interactive widgets
+primaryColor = "#667eea"
+
+# Background color for the main content area
+backgroundColor = "#FFFFFF"
+
+# Background color for the sidebar
+secondaryBackgroundColor = "#f0f2f6"
+
+# Text color
+textColor = "#262730"
+
+# Font family
+font = "sans serif"
+
+[runner]
+# Magic enabled
+magicEnabled = true
+
+# Fast rerun on code changes
+fastReruns = true
+
+# Enforce serializable session state
+enforceSerializableSessionState = false
+
+[client]
+# Toolbar mode for better UX
+toolbarMode = "minimal"
+
+# Show error details
+showErrorDetails = true
+
+[ui]
+# Hide Streamlit's hamburger menu
+hideTopBar = false
+
+# Hide Streamlit's footer
+hideFooterBar = false
