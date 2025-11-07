@@ -26,7 +26,7 @@ class ImageEngine:
         self.default_size = os.getenv("DALLE_SIZE", "1024x1024")
         self.quality = os.getenv("DALLE_QUALITY", "standard")
         self.max_images = int(os.getenv("MAX_IMAGES_PER_ARTICLE", 5))
-        
+
         # Image style templates based on tone
         self.style_templates = {
             "professional": "clean, minimalist, corporate style, professional lighting, high-quality",
@@ -37,6 +37,8 @@ class ImageEngine:
             "technical": "precise, detailed, schematic style, clear diagrams, technical illustration",
             "creative": "artistic, innovative, bold colors, creative composition, inspiring"
         }
+        # Validate size - map invalid values to a supported default
+        self._validate_image_size()
     
     def generate_images(self, article_data: Dict[str, Any], tone: str = "professional") -> Dict[int, Dict[str, str]]:
         """
@@ -51,26 +53,31 @@ class ImageEngine:
         """
         
         try:
+            # Generate only one cover image per article
             images = {}
+
+            # Build a representative section for prompt generation
+            cover_source = {
+                'heading': article_data.get('title', 'Article Cover'),
+                'content': ''
+            }
+
+            # Prefer the first section content to enrich the prompt
             sections = article_data.get('sections', [])
-            
-            for i, section in enumerate(sections[:self.max_images]):
-                # Generate dynamic prompt for this section
-                image_prompt = self._create_image_prompt(
-                    section, 
-                    article_data.get('title', ''), 
-                    tone
-                )
-                
-                # Generate image using DALL-E
-                image_data = self._generate_dalle_image(image_prompt, tone, i)
-                
-                if image_data:
-                    images[i] = image_data
-                
-                # Add small delay to avoid rate limiting
-                time.sleep(1)
-            
+            if sections:
+                cover_source['content'] = sections[0].get('content', '')
+
+            image_prompt = self._create_image_prompt(
+                cover_source,
+                article_data.get('title', ''),
+                tone
+            )
+
+            image_data = self._generate_dalle_image(image_prompt, tone, 0)
+            if image_data:
+                # Use a consistent key for cover image
+                images['cover'] = image_data
+
             return images
             
         except Exception as e:
@@ -309,6 +316,27 @@ class ImageEngine:
             optimized = optimized[:400].rsplit(',', 1)[0]
         
         return optimized.capitalize()
+
+    def _validate_image_size(self):
+        """
+        Ensure the configured image size is one of the supported DALL-E sizes.
+        If not, map it to a safe default and log the change.
+        """
+        supported = {"1024x1024", "1024x1792", "1792x1024"}
+        if self.default_size not in supported:
+            # Try to coerce common aspect ratios to closest supported value
+            size_map = {
+                "1024x720": "1024x1024",
+                "800x600": "1024x1024",
+                "1280x720": "1024x1792",
+            }
+            coerced = size_map.get(self.default_size)
+            if coerced:
+                print(f"Invalid DALLE_SIZE '{self.default_size}' detected. Coercing to supported size '{coerced}'.")
+                self.default_size = coerced
+            else:
+                print(f"Invalid DALLE_SIZE '{self.default_size}' detected. Falling back to '1024x1024'.")
+                self.default_size = "1024x1024"
     
 
     

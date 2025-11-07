@@ -58,8 +58,14 @@ class SEOTools:
             Dictionary containing SEO analysis and optimized data
         """
         
-        # Parse keywords
-        keyword_list = [k.strip().lower() for k in keywords.split(",") if k.strip()] if keywords else []
+        # Parse keywords (support both newline and comma separation)
+        if keywords:
+            if '\n' in keywords:
+                keyword_list = [k.strip().lower() for k in keywords.split("\n") if k.strip()]
+            else:
+                keyword_list = [k.strip().lower() for k in keywords.split(",") if k.strip()]
+        else:
+            keyword_list = []
         primary_keyword = focus_keyword or (keyword_list[0] if keyword_list else None)
         
         # Collect all content for analysis
@@ -369,16 +375,16 @@ class SEOTools:
                 else:
                     analysis['keyword_position'] = 'end'
         
-        # Generate recommendations
-        if title_length < self.optimal_title_length[0]:
-            analysis['recommendations'].append("Title is too short. Consider expanding to 50-60 characters.")
-        elif title_length > self.optimal_title_length[1]:
-            analysis['recommendations'].append("Title is too long. Consider shortening to under 60 characters.")
+        # Generate specific recommendations
+        if title_length < 50:
+            analysis['recommendations'].append(f"Title too short ({title_length} chars). Expand to 50-60 characters for optimal SEO.")
+        elif title_length > 60:
+            analysis['recommendations'].append(f"Title too long ({title_length} chars). Shorten to 50-60 characters for optimal SEO.")
         
         if primary_keyword and not analysis['contains_primary_keyword']:
-            analysis['recommendations'].append(f"Include the primary keyword '{primary_keyword}' in the title.")
+            analysis['recommendations'].append(f"Critical: Include primary keyword '{primary_keyword}' in title for better SEO score.")
         elif primary_keyword and analysis['keyword_position'] != 'beginning':
-            analysis['recommendations'].append("Consider placing the primary keyword closer to the beginning of the title.")
+            analysis['recommendations'].append(f"Move primary keyword '{primary_keyword}' to the beginning of title for maximum SEO impact.")
         
         return analysis
     
@@ -400,14 +406,14 @@ class SEOTools:
             keyword_lower = primary_keyword.lower()
             analysis['contains_primary_keyword'] = keyword_lower in meta_lower
         
-        # Generate recommendations
-        if meta_length < self.optimal_meta_length[0]:
-            analysis['recommendations'].append("Meta description is too short. Expand to 150-160 characters.")
-        elif meta_length > self.optimal_meta_length[1]:
-            analysis['recommendations'].append("Meta description is too long. Shorten to under 160 characters.")
+        # Generate specific recommendations
+        if meta_length < 150:
+            analysis['recommendations'].append(f"Meta description too short ({meta_length} chars). Expand to 150-160 characters for optimal SEO.")
+        elif meta_length > 160:
+            analysis['recommendations'].append(f"Meta description too long ({meta_length} chars). Shorten to 150-160 characters for optimal SEO.")
         
         if primary_keyword and not analysis['contains_primary_keyword']:
-            analysis['recommendations'].append(f"Include the primary keyword '{primary_keyword}' in the meta description.")
+            analysis['recommendations'].append(f"Critical: Include primary keyword '{primary_keyword}' in meta description for better SEO score.")
         
         return analysis
     
@@ -456,57 +462,120 @@ class SEOTools:
         return structure_analysis
     
     def _calculate_seo_score(self, seo_data: Dict[str, Any]) -> int:
-        """Calculate overall SEO score (0-100)"""
+        """Calculate overall SEO score (0-100) based on comprehensive criteria"""
         
         score = 0
         max_score = 100
         
         # Title optimization (20 points)
         title_analysis = seo_data.get('title_analysis', {})
-        if title_analysis.get('optimal_length'):
+        title_length = title_analysis.get('length', 0)
+        
+        # Perfect title length (50-60 chars) gets full points
+        if 50 <= title_length <= 60:
             score += 10
+        elif 45 <= title_length <= 65:
+            score += 8
+        elif 40 <= title_length <= 70:
+            score += 5
+        
+        # Primary keyword in title (must be at beginning for full points)
         if title_analysis.get('contains_primary_keyword'):
-            score += 10
+            if title_analysis.get('keyword_position') == 'beginning':
+                score += 10
+            elif title_analysis.get('keyword_position') == 'middle':
+                score += 7
+            else:
+                score += 5
         
         # Meta description optimization (15 points)
         meta_analysis = seo_data.get('meta_analysis', {})
-        if meta_analysis.get('optimal_length'):
+        meta_length = meta_analysis.get('length', 0)
+        
+        # Perfect meta length (150-160 chars)
+        if 150 <= meta_length <= 160:
             score += 8
+        elif 140 <= meta_length <= 170:
+            score += 6
+        elif 120 <= meta_length <= 180:
+            score += 4
+        
+        # Primary keyword in meta
         if meta_analysis.get('contains_primary_keyword'):
             score += 7
         
         # Keyword optimization (25 points)
         keyword_analysis = seo_data.get('keyword_analysis', {})
         primary_density = keyword_analysis.get('primary_density', 0)
+        
+        # Optimal keyword density (1.0-2.5%)
         if self.optimal_keyword_density[0] <= primary_density <= self.optimal_keyword_density[1]:
             score += 15
-        elif primary_density > 0:
-            score += 8
-        
-        missing_keywords = keyword_analysis.get('missing_keywords', [])
-        if len(missing_keywords) == 0:
+        elif 0.5 <= primary_density <= 3.0:
             score += 10
-        elif len(missing_keywords) <= 2:
+        elif primary_density > 0:
             score += 5
         
-        # Readability (20 points)
+        # All keywords used
+        missing_keywords = keyword_analysis.get('missing_keywords', [])
+        total_keywords = len(seo_data.get('target_keywords', []))
+        if total_keywords > 0:
+            usage_rate = (total_keywords - len(missing_keywords)) / total_keywords
+            if usage_rate >= 0.8:
+                score += 10
+            elif usage_rate >= 0.6:
+                score += 7
+            elif usage_rate >= 0.4:
+                score += 4
+        
+        # Readability optimization (20 points)
         readability = seo_data.get('readability_analysis', {})
         flesch_score = readability.get('flesch_score', 0)
-        if self.optimal_readability_score[0] <= flesch_score <= self.optimal_readability_score[1]:
-            score += 20
-        elif flesch_score >= 50:
-            score += 12
-        elif flesch_score >= 30:
-            score += 8
         
-        # Content structure (20 points)
-        structure = seo_data.get('content_structure', {})
-        if structure.get('total_sections', 0) >= 3:
-            score += 8
-        if structure.get('content_balance') == 'good':
+        # Optimal readability (60-80 Flesch score)
+        if 60 <= flesch_score <= 80:
+            score += 15
+        elif 50 <= flesch_score <= 85:
             score += 12
-        elif structure.get('content_balance') in ['uneven', 'sections_too_long']:
+        elif 40 <= flesch_score <= 90:
+            score += 8
+        elif flesch_score >= 30:
+            score += 4
+        
+        # Sentence length optimization
+        avg_sentence_length = readability.get('avg_sentence_length', 20)
+        if 15 <= avg_sentence_length <= 20:
+            score += 5
+        elif 12 <= avg_sentence_length <= 25:
+            score += 3
+        
+        # Content structure optimization (20 points)
+        structure = seo_data.get('content_structure', {})
+        total_sections = structure.get('total_sections', 0)
+        
+        # Adequate sections
+        if total_sections >= 4:
+            score += 8
+        elif total_sections >= 3:
             score += 6
+        elif total_sections >= 2:
+            score += 3
+        
+        # Content balance
+        balance = structure.get('content_balance', '')
+        if balance == 'good':
+            score += 8
+        elif balance in ['uneven']:
+            score += 5
+        elif balance == 'sections_too_long':
+            score += 3
+        
+        # Word count adequacy
+        word_count = seo_data.get('word_count', 0)
+        if 400 <= word_count <= 800:
+            score += 4
+        elif 300 <= word_count <= 1200:
+            score += 2
         
         return min(max_score, max(0, score))
     

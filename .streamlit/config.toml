@@ -37,21 +37,7 @@ serverAddress = "localhost"
 # Server port for browser to connect to
 serverPort = 8501
 
-[theme]
-# Primary color for interactive widgets
-primaryColor = "#667eea"
-
-# Background color for the main content area
-backgroundColor = "#FFFFFF"
-
-# Background color for the sidebar
-secondaryBackgroundColor = "#f0f2f6"
-
-# Text color
-textColor = "#262730"
-
-# Font family
-font = "sans serif"
+# Theme section removed - using default Streamlit styling
 
 [runner]
 # Magic enabled

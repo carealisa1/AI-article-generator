@@ -21,1538 +21,186 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Professional CSS styling system
-def load_custom_css():
-    st.markdown("""
-    <style>
-    /* Import Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-    
-    /* CSS Variables for Professional Theme */
-    :root {
-        --primary-blue: #2563eb;
-        --primary-blue-dark: #1d4ed8;
-        --secondary-indigo: #4f46e5;
-        --accent-purple: #7c3aed;
-        --success-green: #059669;
-        --warning-amber: #d97706;
-        --error-red: #dc2626;
-        --neutral-50: #f8fafc;
-        --neutral-100: #f1f5f9;
-        --neutral-200: #e2e8f0;
-        --neutral-300: #cbd5e1;
-        --neutral-400: #94a3b8;
-        --neutral-500: #64748b;
-        --neutral-600: #475569;
-        --neutral-700: #334155;
-        --neutral-800: #1e293b;
-        --neutral-900: #0f172a;
-        --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        --gradient-secondary: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Global Overrides */
-    * {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-    }
-
-    /* Hide Streamlit Branding */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    .stDeployButton {display: none;}
-    header[data-testid="stHeader"] {display: none;}
-    
-    /* Main App Container */
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        max-width: 100%;
-    }
-    
-    /* Sidebar Styling */
-    .css-1d391kg {
-        background: var(--gradient-secondary);
-        border-right: 1px solid var(--neutral-200);
-    }
-    
-    .sidebar .sidebar-content {
-        background: var(--gradient-secondary);
-        padding: 1.5rem 1rem;
-    }
-    
-    /* Sidebar Toggle Button Fix */
-    button[kind="header"] {
-        background: transparent !important;
-        border: none !important;
-        color: white !important;
-    }
-    
-    button[kind="header"]:hover {
-        background: rgba(255, 255, 255, 0.1) !important;
-    }
-    
-    /* Ensure sidebar toggle always works */
-    .css-1rs6os.edgvbvh3 {
-        display: block !important;
-        visibility: visible !important;
-    }
-    
-    /* Professional Logo & Branding */
-    .logo-container {
-        text-align: center;
-        margin-bottom: 2rem;
-        padding: 1.5rem 1rem;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 12px;
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .logo-text {
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: white;
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.025em;
-    }
-    
-    .logo-subtitle {
-        color: rgba(255, 255, 255, 0.85);
-        font-size: 0.875rem;
-        font-weight: 400;
-        letter-spacing: 0.025em;
-    }
-    
-    /* Enhanced Sidebar Styling */
-    .css-1d391kg, .css-1lcbmhc {
-        background: var(--gradient-secondary) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-    
-    /* Force Sidebar to Always Show - Natural Layout */
-    [data-testid="stSidebar"] {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        transform: translateX(0) !important;
-        width: 300px !important;
-        min-width: 300px !important;
-        max-width: 300px !important;
-        background: var(--gradient-secondary) !important;
-        position: relative !important;
-        height: 100vh !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-    }
-    
-    [data-testid="stSidebar"] > div {
-        width: 100% !important;
-        padding: 1rem !important;
-        background: var(--gradient-secondary) !important;
-        overflow: visible !important;
-    }
-    
-    /* Hide internal scrollbars */
-    [data-testid="stSidebar"] .stVerticalBlock {
-        overflow: visible !important;
-    }
-    
-    [data-testid="stSidebar"] .element-container {
-        overflow: visible !important;
-    }
-    
-    /* Ensure sidebar content is properly sized */
-    [data-testid="stSidebar"] .stSelectbox,
-    [data-testid="stSidebar"] .stTextInput,
-    [data-testid="stSidebar"] .stTextArea,
-    [data-testid="stSidebar"] .stSlider,
-    [data-testid="stSidebar"] .stRadio,
-    [data-testid="stSidebar"] .stCheckbox {
-        width: 100% !important;
-        max-width: 260px !important;
-    }
-    
-    /* Force Streamlit to not collapse sidebar */
-    .css-1d391kg {
-        width: 300px !important;
-        min-width: 300px !important;
-        transform: translateX(0) !important;
-        margin-left: 0 !important;
-        background: var(--gradient-secondary) !important;
-    }
-    
-    .css-1lcbmhc {
-        width: 300px !important;
-        min-width: 300px !important;
-        transform: translateX(0) !important;
-        background: var(--gradient-secondary) !important;
-    }
-    
-    /* Ensure all sidebar elements are visible */
-    [data-testid="stSidebar"] * {
-        color: white !important;
-    }
-    
-    [data-testid="stSidebar"] .stSelectbox label,
-    [data-testid="stSidebar"] .stTextInput label,
-    [data-testid="stSidebar"] .stTextArea label,
-    [data-testid="stSidebar"] .stSlider label {
-        color: white !important;
-        font-weight: 500 !important;
-    }
-    
-    /* Only hide the collapse control button - keep sidebar content */
-    [data-testid="collapsedControl"] {
-        display: none !important;
-    }
-    
-    /* Hide specific hamburger menu button classes only */
-    button.css-vk3wp9, 
-    button.css-1rs6os, 
-    button.css-17lntkn {
-        display: none !important;
-    }
-    
-    /* Ensure sidebar stays visible */
-    [data-testid="stSidebar"] {
-        transform: translateX(0) !important;
-        visibility: visible !important;
-        display: block !important;
-    }
-    
-    /* Hide any tooltips or title attributes on sidebar elements */
-    [data-testid="stSidebar"] [title],
-    [data-testid="stSidebar"] [aria-label],
-    .css-1d391kg [title],
-    .css-1lcbmhc [title] {
-        title: none !important;
-    }
-    
-    /* Remove any hover tooltips from sidebar toggle area */
-    button[title*="key"],
-    button[aria-label*="key"],
-    div[title*="key"] {
-        title: "" !important;
-        aria-label: "" !important;
-    }
-    
-    /* Hide keyboard navigation button that's not rendering properly */
-    [data-testid="stSidebar"] {
-        position: relative !important;
-    }
-    
-
-    
-    /* Hide any text that says "keyl" specifically */
-    [data-testid="stSidebar"] *:before,
-    [data-testid="stSidebar"] *:after {
-        content: "" !important;
-    }
-    
-    /* Target any element containing exactly "keyl" */
-    [data-testid="stSidebar"] * {
-        color: white !important;
-    }
-    
-    /* Brute force - hide specific Streamlit classes that might contain this */
-    .css-1kyxreq,
-    .css-1v0mbdj,
-    .css-10trblm,
-    .css-1dp5vir,
-    [class*="KeyboardShortcut"],
-    [class*="keyboard"],
-    [class*="stTooltip"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-    }
-    
-    [data-testid="collapsedControl"]:hover {
-        background: var(--primary-blue-dark) !important;
-        transform: scale(1.05) !important;
-        box-shadow: var(--shadow-lg) !important;
-    }
-    
-    /* Ensure sidebar content is always visible */
-    .css-1d391kg, .css-1lcbmhc, .css-17eq0hr {
-        background: var(--gradient-secondary) !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    /* Navigation Sections */
-    .nav-section {
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .nav-section:last-child {
-        border-bottom: none;
-        margin-bottom: 0;
-    }
-    
-    .nav-section h3 {
-        color: white !important;
-        font-size: 0.875rem !important;
-        font-weight: 600 !important;
-        text-transform: uppercase !important;
-        letter-spacing: 0.05em !important;
-        margin-bottom: 0.75rem !important;
-        opacity: 0.9 !important;
-    }
-    
-    /* Professional Form Controls - Comprehensive Sidebar Targeting */
-    
-    /* Sidebar Selectbox Styling */
-    [data-testid="stSidebar"] .stSelectbox > div > div,
-    .sidebar .stSelectbox > div > div,
-    .css-1d391kg .stSelectbox > div > div {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        border-radius: 8px !important;
-        color: #333333 !important;
-    }
-    
-    [data-testid="stSidebar"] .stSelectbox > div > div > div,
-    .sidebar .stSelectbox > div > div > div,
-    .css-1d391kg .stSelectbox > div > div > div {
-        color: #333333 !important;
-    }
-    
-    [data-testid="stSidebar"] .stSelectbox option,
-    .sidebar .stSelectbox option {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Sidebar Text Input Styling */
-    [data-testid="stSidebar"] .stTextInput > div > div > input,
-    .sidebar .stTextInput > div > div > input,
-    .css-1d391kg .stTextInput > div > div > input {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        border-radius: 8px !important;
-        color: #333333 !important;
-        font-size: 0.875rem !important;
-    }
-    
-    [data-testid="stSidebar"] .stTextInput > div > div > input::placeholder,
-    .sidebar .stTextInput > div > div > input::placeholder,
-    .css-1d391kg .stTextInput > div > div > input::placeholder {
-        color: rgba(0, 0, 0, 0.5) !important;
-    }
-    
-    [data-testid="stSidebar"] .stTextInput > div > div > input:focus,
-    .sidebar .stTextInput > div > div > input:focus,
-    .css-1d391kg .stTextInput > div > div > input:focus {
-        border-color: rgba(255, 255, 255, 0.8) !important;
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) !important;
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Sidebar Text Area Styling */
-    [data-testid="stSidebar"] .stTextArea > div > div > textarea,
-    .sidebar .stTextArea > div > div > textarea,
-    .css-1d391kg .stTextArea > div > div > textarea {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        border-radius: 8px !important;
-        color: #333333 !important;
-        font-size: 0.875rem !important;
-    }
-    
-    .stTextArea > div > div > textarea::placeholder {
-        color: rgba(0, 0, 0, 0.5) !important;
-    }
-    
-    [data-testid="stSidebar"] .stTextArea > div > div > textarea::placeholder,
-    .sidebar .stTextArea > div > div > textarea::placeholder,
-    .css-1d391kg .stTextArea > div > div > textarea::placeholder {
-        color: rgba(0, 0, 0, 0.5) !important;
-    }
-    
-    [data-testid="stSidebar"] .stTextArea > div > div > textarea:focus,
-    .sidebar .stTextArea > div > div > textarea:focus,
-    .css-1d391kg .stTextArea > div > div > textarea:focus {
-        border-color: rgba(255, 255, 255, 0.8) !important;
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) !important;
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Sidebar Slider Styling */
-    [data-testid="stSidebar"] .stSlider > div > div > div,
-    .sidebar .stSlider > div > div > div,
-    .css-1d391kg .stSlider > div > div > div {
-        background: rgba(255, 255, 255, 0.3) !important;
-    }
-    
-    [data-testid="stSidebar"] .stSlider > div > div > div > div,
-    .sidebar .stSlider > div > div > div > div,
-    .css-1d391kg .stSlider > div > div > div > div {
-        background: white !important;
-    }
-    
-    /* Sidebar Checkbox Styling */
-    [data-testid="stSidebar"] .stCheckbox > label,
-    .sidebar .stCheckbox > label,
-    .css-1d391kg .stCheckbox > label {
-        color: white !important;
-        font-size: 0.875rem !important;
-    }
-    
-    [data-testid="stSidebar"] .stCheckbox > label > div,
-    .sidebar .stCheckbox > label > div,
-    .css-1d391kg .stCheckbox > label > div {
-        color: white !important;
-    }
-    
-    /* Sidebar Radio Button Styling */
-    [data-testid="stSidebar"] .stRadio > label,
-    .sidebar .stRadio > label,
-    .css-1d391kg .stRadio > label {
-        color: white !important;
-        font-size: 0.875rem !important;
-    }
-    
-    [data-testid="stSidebar"] .stRadio > div > label > div,
-    .sidebar .stRadio > div > label > div,
-    .css-1d391kg .stRadio > div > label > div {
-        color: white !important;
-    }
-    
-    /* Comprehensive Sidebar Text Visibility */
-    [data-testid="stSidebar"],
-    [data-testid="stSidebar"] *,
-    .sidebar,
-    .sidebar *,
-    .css-1d391kg,
-    .css-1d391kg * {
-        color: white !important;
-    }
-    
-    /* Specific Sidebar Elements */
-    [data-testid="stSidebar"] .stMarkdown p,
-    [data-testid="stSidebar"] .stMarkdown h1,
-    [data-testid="stSidebar"] .stMarkdown h2,
-    [data-testid="stSidebar"] .stMarkdown h3,
-    [data-testid="stSidebar"] .stMarkdown h4,
-    [data-testid="stSidebar"] .stMarkdown span,
-    [data-testid="stSidebar"] .stMarkdown div,
-    [data-testid="stSidebar"] label,
-    [data-testid="stSidebar"] .stSelectbox label,
-    [data-testid="stSidebar"] .stTextInput label,
-    [data-testid="stSidebar"] .stTextArea label,
-    [data-testid="stSidebar"] .stSlider label,
-    [data-testid="stSidebar"] .stNumberInput label,
-    [data-testid="stSidebar"] .stCheckbox span,
-    [data-testid="stSidebar"] .stRadio span {
-        color: white !important;
-    }
-    
-    /* Comprehensive Sidebar Dropdown Styling */
-    [data-testid="stSidebar"] .stSelectbox,
-    [data-testid="stSidebar"] .stSelectbox *,
-    .sidebar .stSelectbox,
-    .sidebar .stSelectbox *,
-    .css-1d391kg .stSelectbox,
-    .css-1d391kg .stSelectbox * {
-        color: #333333 !important;
-        background: rgba(255, 255, 255, 0.9) !important;
-    }
-    
-    /* Dropdown container */
-    [data-testid="stSidebar"] .stSelectbox > div,
-    .sidebar .stSelectbox > div,
-    .css-1d391kg .stSelectbox > div {
-        background: rgba(255, 255, 255, 0.9) !important;
-    }
-    
-    /* Dropdown input field */
-    [data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] > div,
-    .sidebar .stSelectbox [data-baseweb="select"] > div,
-    .css-1d391kg .stSelectbox [data-baseweb="select"] > div {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        color: #333333 !important;
-    }
-    
-    /* Dropdown selected value */
-    [data-testid="stSidebar"] .stSelectbox [data-baseweb="select"] > div > div,
-    .sidebar .stSelectbox [data-baseweb="select"] > div > div,
-    .css-1d391kg .stSelectbox [data-baseweb="select"] > div > div {
-        color: #333333 !important;
-    }
-    
-    /* Dropdown options and roles */
-    [data-testid="stSidebar"] .stSelectbox [role="combobox"],
-    [data-testid="stSidebar"] .stSelectbox [role="listbox"],
-    [data-testid="stSidebar"] .stSelectbox [role="option"],
-    [data-testid="stSidebar"] .stSelectbox select,
-    [data-testid="stSidebar"] .stSelectbox option,
-    .sidebar .stSelectbox [role="combobox"],
-    .sidebar .stSelectbox [role="listbox"], 
-    .sidebar .stSelectbox [role="option"],
-    .sidebar .stSelectbox select,
-    .sidebar .stSelectbox option,
-    .css-1d391kg .stSelectbox [role="combobox"],
-    .css-1d391kg .stSelectbox [role="listbox"],
-    .css-1d391kg .stSelectbox [role="option"],
-    .css-1d391kg .stSelectbox select,
-    .css-1d391kg .stSelectbox option {
-        color: #333333 !important;
-        background: rgba(255, 255, 255, 0.95) !important;
-    }
-    
-    /* Force all selectbox text to be black */
-    [data-testid="stSidebar"] .stSelectbox span,
-    [data-testid="stSidebar"] .stSelectbox div,
-    [data-testid="stSidebar"] .stSelectbox p,
-    .sidebar .stSelectbox span,
-    .sidebar .stSelectbox div,
-    .sidebar .stSelectbox p,
-    .css-1d391kg .stSelectbox span,
-    .css-1d391kg .stSelectbox div,
-    .css-1d391kg .stSelectbox p {
-        color: #333333 !important;
-    }
-    
-    /* Dropdown menu when opened */
-    [data-testid="stSidebar"] .stSelectbox ul,
-    [data-testid="stSidebar"] .stSelectbox li,
-    .sidebar .stSelectbox ul,
-    .sidebar .stSelectbox li,
-    .css-1d391kg .stSelectbox ul,
-    .css-1d391kg .stSelectbox li {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Target BaseWeb dropdown components */
-    [data-testid="stSidebar"] [data-baseweb="popover"],
-    [data-testid="stSidebar"] [data-baseweb="menu"],
-    [data-testid="stSidebar"] [data-baseweb="menu"] li,
-    [data-testid="stSidebar"] [data-baseweb="menu"] div,
-    .sidebar [data-baseweb="popover"],
-    .sidebar [data-baseweb="menu"],
-    .sidebar [data-baseweb="menu"] li,
-    .sidebar [data-baseweb="menu"] div,
-    .css-1d391kg [data-baseweb="popover"],
-    .css-1d391kg [data-baseweb="menu"],
-    .css-1d391kg [data-baseweb="menu"] li,
-    .css-1d391kg [data-baseweb="menu"] div {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Target dropdown options when expanded */
-    [data-testid="stSidebar"] .stSelectbox [aria-expanded="true"] + div,
-    [data-testid="stSidebar"] .stSelectbox [aria-expanded="true"] + div *,
-    .sidebar .stSelectbox [aria-expanded="true"] + div,
-    .sidebar .stSelectbox [aria-expanded="true"] + div *,
-    .css-1d391kg .stSelectbox [aria-expanded="true"] + div,
-    .css-1d391kg .stSelectbox [aria-expanded="true"] + div * {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Sidebar Number Input Styling */
-    [data-testid="stSidebar"] .stNumberInput > div > div > input,
-    .sidebar .stNumberInput > div > div > input,
-    .css-1d391kg .stNumberInput > div > div > input {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border: 1px solid rgba(255, 255, 255, 0.5) !important;
-        border-radius: 8px !important;
-        color: #333333 !important;
-    }
-    
-    [data-testid="stSidebar"] .stNumberInput > div > div > input:focus,
-    .sidebar .stNumberInput > div > div > input:focus,
-    .css-1d391kg .stNumberInput > div > div > input:focus {
-        border-color: rgba(255, 255, 255, 0.8) !important;
-        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5) !important;
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Labels and Help Text */
-    .stSelectbox > label,
-    .stTextInput > label,
-    .stTextArea > label,
-    .stSlider > label,
-    .stNumberInput > label {
-        color: white !important;
-        font-weight: 500 !important;
-        font-size: 0.875rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    /* Sidebar Dropdown Labels - Make Black for Readability */
-    [data-testid="stSidebar"] .stSelectbox > label,
-    .sidebar .stSelectbox > label,
-    .css-1d391kg .stSelectbox > label {
-        color: #333333 !important;
-        background: rgba(255, 255, 255, 0.9) !important;
-        padding: 0.25rem 0.5rem !important;
-        border-radius: 4px !important;
-        font-weight: 500 !important;
-        font-size: 0.875rem !important;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .stSelectbox .help,
-    .stTextInput .help,
-    .stTextArea .help,
-    .stSlider .help {
-        color: rgba(255, 255, 255, 0.7) !important;
-        font-size: 0.75rem !important;
-    }
-    
-    /* Sidebar Metrics/Info Cards */
-    .sidebar-metric {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 0.75rem;
-        border-radius: 6px;
-        margin: 0.5rem 0;
-        border-left: 3px solid rgba(255, 255, 255, 0.3);
-    }
-    
-    .sidebar-metric-label {
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 0.75rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    
-    .sidebar-metric-value {
-        color: white;
-        font-size: 1rem;
-        font-weight: 600;
-        margin-top: 0.25rem;
-    }
-    
-    /* Main Content Area Styling */
-    .main-header {
-        background: white;
-        padding: 2rem 0 1rem 0;
-        margin-bottom: 2rem;
-        border-bottom: 1px solid var(--neutral-200);
-    }
-    
-    .main-title {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: var(--neutral-900);
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.025em;
-    }
-    
-    .main-subtitle {
-        font-size: 1.125rem;
-        color: var(--neutral-600);
-        font-weight: 400;
-    }
-    
-    /* Progress & Status Indicators */
-    .progress-container {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 1.5rem 0;
-        box-shadow: var(--shadow-lg);
-        border: 1px solid var(--neutral-200);
-        text-align: center;
-    }
-    
-    .progress-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--neutral-900);
-        margin-bottom: 0.5rem;
-    }
-    
-    .progress-step {
-        font-size: 0.875rem;
-        color: var(--neutral-600);
-        margin-bottom: 1rem;
-    }
-    
-    .stProgress > div > div > div {
-        background: var(--gradient-secondary) !important;
-        border-radius: 6px !important;
-    }
-    
-    /* Professional Cards */
-    .content-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 1rem 0;
-        box-shadow: var(--shadow-md);
-        border: 1px solid var(--neutral-200);
-        transition: all 0.2s ease;
-    }
-    
-    .content-card:hover {
-        box-shadow: var(--shadow-lg);
-        border-color: var(--neutral-300);
-    }
-    
-    .card-header {
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--neutral-900);
-        margin-bottom: 0.75rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid var(--neutral-200);
-    }
-    
-    /* Professional Buttons */
-    .stButton > button {
-        background: var(--gradient-secondary) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 0.75rem 1.5rem !important;
-        font-weight: 600 !important;
-        font-size: 0.875rem !important;
-        transition: all 0.2s ease !important;
-        box-shadow: var(--shadow-sm) !important;
-        letter-spacing: 0.025em !important;
-    }
-    
-    .stButton > button:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: var(--shadow-md) !important;
-        background: var(--primary-blue-dark) !important;
-    }
-    
-    .stButton > button:active {
-        transform: translateY(0) !important;
-    }
-    
-    /* Primary Button Variant */
-    .primary-button {
-        background: var(--gradient-primary) !important;
-    }
-    
-    /* Success/Info/Warning States */
-    .stSuccess {
-        background: rgba(5, 150, 105, 0.1) !important;
-        border: 1px solid var(--success-green) !important;
-        border-radius: 8px !important;
-        color: var(--success-green) !important;
-    }
-    
-    .stInfo {
-        background: rgba(37, 99, 235, 0.1) !important;
-        border: 1px solid var(--primary-blue) !important;
-        border-radius: 8px !important;
-        color: var(--primary-blue) !important;
-    }
-    
-    .stWarning {
-        background: rgba(217, 119, 6, 0.1) !important;
-        border: 1px solid var(--warning-amber) !important;
-        border-radius: 8px !important;
-        color: var(--warning-amber) !important;
-    }
-    
-    .stError {
-        background: rgba(220, 38, 38, 0.1) !important;
-        border: 1px solid var(--error-red) !important;
-        border-radius: 8px !important;
-        color: var(--error-red) !important;
-    }
-    
-    /* Generated content styling */
-    .generated-content {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        color: #1a202c;
-        padding: 2rem;
-        border-radius: 15px;
-        margin: 1rem 0;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-    
-    .generated-content h1 {
-        color: #2d3748;
-        border-bottom: 3px solid #667eea;
-        padding-bottom: 0.5rem;
-    }
-    
-    .generated-content h2 {
-        color: #4a5568;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-    }
-    
-    /* SEO metrics styling */
-    .seo-metrics {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin: 1rem 0;
-    }
-    
-    .metric-card {
-        background: rgba(102, 126, 234, 0.1);
-        padding: 1rem;
-        border-radius: 10px;
-        text-align: center;
-        border: 1px solid rgba(102, 126, 234, 0.2);
-    }
-    
-    .metric-value {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #667eea;
-    }
-    
-    .metric-label {
-        color: #64748b;
-        font-size: 0.9rem;
-    }
-    
-    /* Watermark styling */
-    .ai-watermark {
-        text-align: center;
-        margin: 2rem 0;
-        padding: 1rem;
-        background: linear-gradient(45deg, #667eea, #764ba2);
-        color: white;
-        border-radius: 10px;
-        font-style: italic;
-    }
-    
-    /* Professional Metrics & Analytics */
-    .metric-container, .seo-metrics {
-        display: flex;
-        gap: 1rem;
-        margin: 1.5rem 0;
-        flex-wrap: wrap;
-    }
-    
-    .metric-card {
-        flex: 1;
-        min-width: 200px;
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: var(--shadow-sm);
-        border: 1px solid var(--neutral-200);
-        text-align: center;
-        transition: all 0.2s ease;
-    }
-    
-    .metric-card:hover {
-        box-shadow: var(--shadow-md);
-        transform: translateY(-2px);
-    }
-    
-    .metric-value {
-        font-size: 2.25rem;
-        font-weight: 800;
-        color: var(--primary-blue);
-        line-height: 1;
-        margin-bottom: 0.5rem;
-    }
-    
-    .metric-label {
-        font-size: 0.875rem;
-        color: var(--neutral-600);
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    
-    /* Generated Content Styling */
-    .generated-content {
-        background: white;
-        padding: 2rem;
-        border-radius: 16px;
-        box-shadow: var(--shadow-lg);
-        border: 1px solid var(--neutral-200);
-        margin: 2rem 0;
-    }
-    
-    .generated-content h1 {
-        color: var(--neutral-900) !important;
-        font-size: 2.5rem !important;
-        font-weight: 800 !important;
-        margin-bottom: 1rem !important;
-        line-height: 1.1 !important;
-    }
-    
-    .generated-content h2 {
-        color: var(--primary-blue) !important;
-        font-size: 1.75rem !important;
-        font-weight: 700 !important;
-        margin: 2rem 0 1rem 0 !important;
-    }
-    
-    .generated-content p {
-        color: var(--neutral-700) !important;
-        line-height: 1.7 !important;
-        margin-bottom: 1rem !important;
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .main-title {
-            font-size: 2rem;
-        }
-        
-        .sidebar-header {
-            font-size: 1.25rem;
-        }
-        
-        .content-card, .generated-content {
-            padding: 1rem;
-            margin: 0.75rem 0;
-        }
-        
-        .progress-container {
-            padding: 1rem;
-        }
-        
-        .metric-container, .seo-metrics {
-            flex-direction: column;
-        }
-        
-        .metric-card {
-            min-width: unset;
-        }
-        
-        .metric-value {
-            font-size: 1.75rem;
-        }
-    }
-    
-    /* Loading States */
-    @keyframes pulse {
-        0%, 100% { opacity: 0.8; }
-        50% { opacity: 1; }
-    }
-    
-    .loading-indicator {
-        animation: pulse 2s infinite;
-    }
-    
-    /* Focus & Accessibility */
-    .stSelectbox > div > div, .stTextInput > div > div > input, .stTextArea > div > div > textarea {
-        border-radius: 8px !important;
-        border: 1px solid var(--neutral-300) !important;
-        transition: all 0.2s ease !important;
-    }
-    
-    .stSelectbox > div > div:focus-within, 
-    .stTextInput > div > div > input:focus, 
-    .stTextArea > div > div > textarea:focus {
-        border-color: var(--primary-blue) !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important;
-        outline: none !important;
-    }
-    
-    /* Global dropdown menu styling for sidebar-related dropdowns */
-    [data-baseweb="popover"],
-    [data-baseweb="menu"],
-    [data-baseweb="select"] [role="listbox"],
-    [data-baseweb="select"] [role="option"] {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    [data-baseweb="popover"] *,
-    [data-baseweb="menu"] *,
-    [data-baseweb="select"] [role="listbox"] *,
-    [data-baseweb="select"] [role="option"] * {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Target dropdown lists and items */
-    [data-baseweb="menu"] ul,
-    [data-baseweb="menu"] li,
-    [role="listbox"],
-    [role="option"] {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Force dropdown options to be black - comprehensive targeting */
-    div[role="listbox"] > div,
-    div[role="listbox"] div,
-    div[role="listbox"] span,
-    [data-baseweb="menu"] div,
-    [data-baseweb="menu"] span,
-    [data-baseweb="popover"] div,
-    [data-baseweb="popover"] span,
-    .css-26l3qy-menu,
-    .css-26l3qy-menu div,
-    .css-26l3qy-menu span {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Target Streamlit's specific dropdown menu classes */
-    div[data-baseweb="popover"] div[role="listbox"],
-    div[data-baseweb="popover"] div[role="listbox"] div,
-    div[data-baseweb="popover"] div[role="listbox"] span,
-    div[data-baseweb="popover"] div[role="option"],
-    div[data-baseweb="popover"] div[role="option"] div,
-    div[data-baseweb="popover"] div[role="option"] span {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Additional targeting for dropdown content */
-    .css-qrbaxs,
-    .css-qrbaxs div,
-    .css-qrbaxs span,
-    .css-1n76uvr,
-    .css-1n76uvr div,
-    .css-1n76uvr span {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* ULTRA AGGRESSIVE dropdown option targeting - catch all possible selectors */
-    div[data-testid] div[role="listbox"] *,
-    div[data-testid] div[role="option"] *,
-    div[data-testid] [data-baseweb="popover"] *,
-    div[data-testid] [data-baseweb="menu"] *,
-    [class*="select"] [role="option"],
-    [class*="select"] [role="option"] *,
-    [class*="menu"] div,
-    [class*="menu"] span,
-    [class*="option"] div,
-    [class*="option"] span,
-    [class*="listbox"] div,
-    [class*="listbox"] span {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Target all possible Streamlit dropdown CSS classes */
-    [class*="css-"] div[role="option"],
-    [class*="css-"] div[role="option"] *,
-    [class*="css-"] div[role="listbox"],
-    [class*="css-"] div[role="listbox"] *,
-    div[class*="select"] div,
-    div[class*="select"] span,
-    div[class*="menu"] div,
-    div[class*="menu"] span {
-        background: rgba(255, 255, 255, 0.95) !important;
-        color: #333333 !important;
-    }
-    
-    /* Print Styles */
-    @media print {
-        .sidebar, .stButton, .progress-container {
-            display: none !important;
-        }
-        
-        .main-content {
-            margin-left: 0 !important;
-        }
-        
-        .generated-content {
-            box-shadow: none !important;
-            border: none !important;
-        }
-    }
-    </style>
-    
-    <script>
-    // Prevent sidebar from collapsing and ensure proper visibility
-    function preventSidebarCollapse() {
-        const sidebar = document.querySelector('[data-testid="stSidebar"]');
-        if (sidebar) {
-            sidebar.style.display = 'block';
-            sidebar.style.visibility = 'visible';
-            sidebar.style.opacity = '1';
-            sidebar.style.transform = 'translateX(0)';
-            sidebar.style.width = '300px';
-            sidebar.style.minWidth = '300px';
-        }
-        
-        // Only hide collapse buttons, keep sidebar content
-        const collapseButtons = document.querySelectorAll('[data-testid="collapsedControl"]');
-        collapseButtons.forEach(btn => {
-            if (btn) {
-                btn.style.display = 'none';
-                btn.removeAttribute('title');
-                btn.removeAttribute('aria-label');
-            }
-        });
-        
-        // Hide hamburger menu buttons specifically
-        document.querySelectorAll('button.css-vk3wp9, button.css-1rs6os, button.css-17lntkn').forEach(btn => {
-            btn.style.display = 'none';
-        });
-        
-        // Remove any stray title attributes that might show "keyl" tooltip
-        document.querySelectorAll('[title*="key"]').forEach(el => {
-            el.removeAttribute('title');
-        });
-        
-        document.querySelectorAll('[aria-label*="key"]').forEach(el => {
-            el.removeAttribute('aria-label');
-        });
-        
-        // Force sidebar text visibility
-        function forceSidebarVisibility() {
-            const sidebar = document.querySelector('[data-testid="stSidebar"]');
-            if (sidebar) {
-                // Apply styling to sidebar elements
-                sidebar.querySelectorAll('*').forEach(el => {
-                    // Check if element is part of a dropdown/selectbox
-                    const isSelectboxElement = el.closest('.stSelectbox') || 
-                                             el.tagName === 'SELECT' || 
-                                             el.tagName === 'OPTION' ||
-                                             el.getAttribute('role') === 'combobox' ||
-                                             el.getAttribute('role') === 'listbox' ||
-                                             el.getAttribute('role') === 'option';
-                    
-                    if (el.tagName && ['INPUT', 'TEXTAREA', 'SELECT', 'OPTION'].includes(el.tagName)) {
-                        // Input elements get black text on white background
-                        el.style.color = '#333333';
-                        el.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                        el.style.border = '1px solid rgba(255, 255, 255, 0.5)';
-                        el.style.borderRadius = '8px';
-                        
-                        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                            el.addEventListener('focus', function() {
-                                this.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                                this.style.color = '#333333';
-                                this.style.borderColor = 'rgba(255, 255, 255, 0.8)';
-                            });
-                        }
-                        
-                        if (el.tagName === 'SELECT' || el.tagName === 'OPTION') {
-                            el.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                            el.style.color = '#333333';
-                        }
-                    } else if (isSelectboxElement) {
-                        // All dropdown/selectbox elements get black text
-                        el.style.color = '#333333';
-                        el.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                    } else {
-                        // All other text elements stay white
-                        el.style.color = 'white';
-                    }
-                });
-                
-                // Force labels and other text to be white, except dropdown labels
-                sidebar.querySelectorAll('label, span, div[role="listbox"], .stMarkdown').forEach(el => {
-                    // Check if this is a selectbox label
-                    const isSelectboxLabel = el.tagName === 'LABEL' && 
-                                           (el.closest('.stSelectbox') || el.parentElement?.classList.contains('stSelectbox'));
-                    
-                    if (isSelectboxLabel) {
-                        // Make dropdown labels black on white background
-                        el.style.color = '#333333';
-                        el.style.background = 'rgba(255, 255, 255, 0.9)';
-                        el.style.padding = '0.25rem 0.5rem';
-                        el.style.borderRadius = '4px';
-                        el.style.fontWeight = '500';
-                    } else {
-                        // All other text stays white
-                        el.style.color = 'white';
-                    }
-                });
-            }
-        }
-        
-        // Remove broken keyboard navigation button
-        function removeKeyboardButton() {
-            // Target keyboard navigation elements
-            document.querySelectorAll('*').forEach(el => {
-                const text = el.textContent || el.innerText || '';
-                // Remove elements containing keyboard navigation text
-                if (text.includes('keyboard_') || text.includes('keyl') || text === 'keyboard') {
-                    el.style.display = 'none';
-                    el.style.visibility = 'hidden';
-                    el.style.opacity = '0';
-                    el.remove();
-                }
-            });
-            
-            // Remove buttons with keyboard-related attributes
-            document.querySelectorAll('button, div, span').forEach(el => {
-                const ariaLabel = el.getAttribute('aria-label') || '';
-                const title = el.getAttribute('title') || '';
-                const className = el.className || '';
-                
-                if (ariaLabel.toLowerCase().includes('keyboard') || 
-                    title.toLowerCase().includes('keyboard') ||
-                    className.includes('keyboard')) {
-                    el.style.display = 'none';
-                    el.remove();
-                }
-            });
-            
-            // Hide Streamlit's keyboard navigation classes
-            document.querySelectorAll('[class*="KeyboardShortcut"], [class*="keyboard"], .css-1kyxreq, .css-1v0mbdj, .css-10trblm').forEach(el => {
-                el.style.display = 'none';
-                el.remove();
-            });
-        }
-        
-        // Run both functions multiple times
-        forceSidebarVisibility();
-        removeKeyboardButton();
-        setTimeout(() => {
-            forceSidebarVisibility();
-            removeKeyboardButton();
-        }, 100);
-        setTimeout(() => {
-            forceSidebarVisibility();
-            removeKeyboardButton();
-        }, 500);
-        setTimeout(() => {
-            forceSidebarVisibility();
-            removeKeyboardButton();
-        }, 1000);
-        
-        // Set up continuous monitoring for keyboard elements
-        const keyboardObserver = new MutationObserver(removeKeyboardButton);
-        keyboardObserver.observe(document.body, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
-        
-        // Force dropdown styling continuously
-        function forceDropdownStyling() {
-            const sidebar = document.querySelector('[data-testid="stSidebar"]');
-            if (sidebar) {
-                // Target all selectbox elements and their children
-                sidebar.querySelectorAll('.stSelectbox, .stSelectbox *, [data-baseweb="select"], [data-baseweb="select"] *').forEach(el => {
-                    el.style.color = '#333333';
-                    if (!['INPUT', 'TEXTAREA'].includes(el.tagName)) {
-                        el.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                    }
-                });
-                
-                // Target labels specifically
-                sidebar.querySelectorAll('.stSelectbox label, .stSelectbox > label').forEach(label => {
-                    label.style.color = '#333333';
-                    label.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                    label.style.padding = '0.25rem 0.5rem';
-                    label.style.borderRadius = '4px';
-                    label.style.fontWeight = '500';
-                });
-                
-                // Target dropdown menus and options when opened
-                sidebar.querySelectorAll('[data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"], [role="option"]').forEach(el => {
-                    el.style.color = '#333333';
-                    el.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                });
-                
-                // Target all list items in dropdowns
-                sidebar.querySelectorAll('ul, li').forEach(el => {
-                    if (el.closest('.stSelectbox')) {
-                        el.style.color = '#333333';
-                        el.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                    }
-                });
-            }
-            
-            // Also check for dropdown menus outside sidebar but related to sidebar selectboxes
-            document.querySelectorAll('[data-baseweb="popover"], [data-baseweb="menu"]').forEach(menu => {
-                // Check if this menu is related to a sidebar selectbox
-                const triggerElement = document.querySelector('[data-testid="stSidebar"] .stSelectbox [aria-expanded="true"]');
-                if (triggerElement) {
-                    menu.querySelectorAll('*').forEach(el => {
-                        el.style.color = '#333333';
-                        el.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                    });
-                }
-            });
-            
-            // Aggressively target all dropdown options globally
-            document.querySelectorAll('div[role="listbox"], div[role="option"], [data-baseweb="popover"], [data-baseweb="menu"]').forEach(dropdown => {
-                dropdown.style.color = '#333333';
-                dropdown.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                
-                // Target all children of dropdown elements
-                dropdown.querySelectorAll('*').forEach(child => {
-                    child.style.color = '#333333';
-                    child.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                });
-            });
-        }
-        
-        // Run dropdown styling periodically
-        setInterval(forceDropdownStyling, 500);
-        
-        // Additional aggressive dropdown option targeting
-        function forceDropdownOptionStyling() {
-            // Target all possible dropdown option selectors
-            const selectors = [
-                'div[role="listbox"]',
-                'div[role="option"]', 
-                '[data-baseweb="popover"]',
-                '[data-baseweb="menu"]',
-                '.css-26l3qy-menu',
-                '.css-qrbaxs',
-                '.css-1n76uvr'
-            ];
-            
-            selectors.forEach(selector => {
-                document.querySelectorAll(selector).forEach(el => {
-                    el.style.color = '#333333';
-                    el.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                    
-                    // Also style all children
-                    el.querySelectorAll('*').forEach(child => {
-                        child.style.color = '#333333';
-                        if (!['INPUT', 'TEXTAREA', 'BUTTON'].includes(child.tagName)) {
-                            child.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                        }
-                    });
-                });
-            });
-        }
-        
-        // Run dropdown option styling more frequently to catch dynamic elements
-        setInterval(forceDropdownOptionStyling, 100);
-        
-        // ULTRA AGGRESSIVE dropdown targeting
-        function ultraAggressiveDropdownStyling() {
-            // Target ALL divs that might be dropdown options
-            document.querySelectorAll('div').forEach(div => {
-                // Check if element has role attributes or is in a dropdown context
-                if (div.getAttribute('role') === 'option' || 
-                    div.getAttribute('role') === 'listbox' ||
-                    div.closest('[data-baseweb="popover"]') ||
-                    div.closest('[data-baseweb="menu"]') ||
-                    div.closest('[role="listbox"]') ||
-                    div.classList.toString().includes('select') ||
-                    div.classList.toString().includes('menu') ||
-                    div.classList.toString().includes('option')) {
-                    
-                    div.style.color = '#333333';
-                    div.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                    
-                    // Also target all children
-                    div.querySelectorAll('*').forEach(child => {
-                        child.style.color = '#333333';
-                        child.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                    });
-                }
-            });
-            
-            // Target any white text elements that might be dropdown options
-            document.querySelectorAll('*').forEach(el => {
-                const computedStyle = window.getComputedStyle(el);
-                if ((computedStyle.color === 'rgb(255, 255, 255)' || computedStyle.color === 'white') &&
-                    (el.closest('[data-baseweb="popover"]') || 
-                     el.closest('[data-baseweb="menu"]') ||
-                     el.closest('[role="listbox"]') ||
-                     el.getAttribute('role') === 'option')) {
-                    el.style.color = '#333333';
-                    el.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                }
-            });
-        }
-        
-        // Run ultra aggressive styling every 50ms
-        setInterval(ultraAggressiveDropdownStyling, 50);
-        
-        // Set up mutation observer for dropdown changes
-        const dropdownObserver = new MutationObserver((mutations) => {
-            mutations.forEach(mutation => {
-                if (mutation.type === 'childList') {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType === 1) { // Element node
-                            // Check if added node is a dropdown element
-                            if (node.getAttribute && (
-                                node.getAttribute('role') === 'listbox' ||
-                                node.getAttribute('role') === 'option' ||
-                                node.getAttribute('data-baseweb') === 'popover' ||
-                                node.getAttribute('data-baseweb') === 'menu')) {
-                                
-                                // Style the new element immediately
-                                node.style.color = '#333333';
-                                node.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                                
-                                // Style all children
-                                node.querySelectorAll('*').forEach(child => {
-                                    child.style.color = '#333333';
-                                    child.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                                });
-                            }
-                        }
-                    });
-                }
-            });
-        });
-        
-        // Observe the entire document for dropdown changes
-        dropdownObserver.observe(document.body, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['role', 'data-baseweb', 'class']
-        });
-    }
-    
-    // Run on page load and periodically
-    document.addEventListener('DOMContentLoaded', () => {
-        preventSidebarCollapse();
-        forceSidebarVisibility();
-    });
-    setTimeout(() => {
-        preventSidebarCollapse();
-        forceSidebarVisibility();
-    }, 100);
-    setTimeout(() => {
-        preventSidebarCollapse();
-        forceSidebarVisibility();
-    }, 500);
-    setTimeout(() => {
-        preventSidebarCollapse();
-        forceSidebarVisibility();
-    }, 1000);
-    
-    // Monitor for changes
-    const observer = new MutationObserver(() => {
-        preventSidebarCollapse();
-        forceSidebarVisibility();
-    });
-    observer.observe(document.body, { 
-        childList: true, 
-        subtree: true, 
-        attributes: true,
-        attributeFilter: ['style', 'class']
-    });
-    </script>
-    """, unsafe_allow_html=True)
 
 def create_sidebar():
-    """Create the elegant sidebar with all input controls"""
+    """Create a professional sidebar with organized input controls"""
     
-    # Logo and branding
-    st.sidebar.markdown("""
-    <div class="logo-container">
-        <div class="logo-text">✨ AI Writer</div>
-        <div class="logo-subtitle">Powered by OpenAI GPT-4 & DALL-E 3</div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Header section
+    with st.sidebar.container():
+        st.markdown("## Content Configuration")
+        st.markdown("Configure your article generation parameters")
     
-    st.sidebar.markdown("### 📝 Content Configuration")
+    st.sidebar.divider()
     
-    # URL/Topic Input
-    input_type = st.sidebar.radio("Input Method:", ["Topic/Keywords", "URL Analysis"])
-    
-    if input_type == "URL Analysis":
-        url_input = st.sidebar.text_input(
-            "🔗 Article URL", 
-            placeholder="https://example.com/article-to-analyze",
-            help="Provide a URL to analyze and generate related content"
+    # Content Source Section
+    with st.sidebar.expander("📝 Content Source", expanded=True):
+        input_type = st.radio(
+            "Choose input method:",
+            ["Topic & Keywords", "URL Analysis"],
+            help="Select how you want to provide content input"
         )
-    else:
-        url_input = None
+        
+        if input_type == "URL Analysis":
+            url_input = st.text_area(
+                "Enter Source URLs (one per line):",
+                placeholder="https://example.com/article\nhttps://another-source.com/page",
+                height=120,
+                help="URLs that the model can use as context or reference. One URL per line."
+            )
+
+            # Optional keywords when using URL analysis
+            keywords = st.text_area(
+                "Optional Keywords (one per line):",
+                placeholder="Optional keywords to guide generation (first = primary).\nE.g. Bitcoin fiyat tahmini",
+                height=80,
+                help="Optional. If provided, keywords will guide generation alongside URL content. One per line."
+            )
+        else:
+            url_input = None
+
+            keywords = st.text_area(
+                "Keywords (one per line):",
+                placeholder="Bitcoin fiyat tahmini\nkripto para analizi\nfiyat tahminleri",
+                height=120,
+                help="Keywords to guide the article (first = primary keyword). One keyword per line."
+            )
+
+        if keywords:
+            keyword_count = len([k.strip() for k in keywords.split("\n") if k.strip()])
+            st.success(f"✓ {keyword_count} keywords configured")
     
-    # Keywords input
-    keywords = st.sidebar.text_area(
-        "🎯 Target Keywords", 
-        placeholder="Bitcoin, cryptocurrency, trading, investment",
-        help="Enter main keywords separated by commas for SEO optimization",
-        height=80,
-        key="keywords_input"
-    )
+    # Content Style Section  
+    with st.sidebar.expander("🎨 Content Style", expanded=True):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            language = st.selectbox(
+                "Select Language:",
+                ["English", "French", "Turkish", "Spanish", "German"],
+                help="Choose one: English, French, Turkish, Spanish, German"
+            )
+        
+        with col2:
+            tone = st.selectbox(
+                "Writing Tone:",
+                ["Professional", "Conversational", "Academic", "Technical", "Creative"],
+                help="Article tone and style"
+            )
+        
+        focus = st.text_input(
+            "News Angle / Focus:",
+            placeholder="e.g., price prediction, staking, new updates",
+            help="Optional input to specify focus (e.g., 'price prediction', 'staking', 'new updates')"
+        )
+        
+        additional_content = st.text_area(
+            "Additional Content:",
+            placeholder="Optional. Additional text source for inspiration...",
+            height=80,
+            help="Optional. Treated as another text source for inspiration."
+        )
     
-    # Show keyword count
-    if keywords:
-        keyword_list = [k.strip() for k in keywords.split(",") if k.strip()]
-        st.sidebar.caption(f"📊 {len(keyword_list)} keywords detected")
+    # Article Structure Section
+    with st.sidebar.expander("📊 Article Structure", expanded=True):
+        sections = st.slider(
+            "Number of Sections:",
+            min_value=1,
+            max_value=6,
+            value=4,
+            help="Controls how many H2 sections the article should contain (1-6)"
+        )
+        
+        # Hardcoded word count
+        word_count = 500
     
-    st.sidebar.markdown("### 🎨 Style & Format")
+    # Enhancement Options Section
+    with st.sidebar.expander("⚡ Enhancement Options"):
+        # Hardcoded enhancement values
+        include_images = True
+        seo_focus = True
+        
+        st.markdown("**Promotional Content:**")
+        
+        # Promotional Content Dropdown
+        promotional_options = [
+            "None",
+            "Doge coins", 
+            "Shiba", 
+            "Pepe", 
+            "Best Wallet", 
+            "Bitcoin Hyper", 
+            "BlockchainFX", 
+            "MAXI DOGE", 
+            "Pepenode", 
+            "Snorter", 
+            "Subbd", 
+            "Spacepay"
+        ]
+        
+        selected_promotion = st.selectbox(
+            "Select Promotional Content:",
+            promotional_options,
+            help="Choose a predefined promotional content"
+        )
+        
+        # Custom promotional text (override dropdown if filled)
+        custom_promotion = st.text_area(
+            "Custom Promotional Text (Optional):",
+            placeholder="Override dropdown selection with custom content...",
+            height=60,
+            help="If filled, this will override the dropdown selection"
+        )
+        
+        # Promotional Style Options
+        promotional_style = st.radio(
+            "Promotional Style:",
+            ["No Promotion", "CTA only", "Full Section + CTA"],
+            help="Choose how to integrate promotional content"
+        )
+        
+        # Determine final promotion content
+        promotion = custom_promotion if custom_promotion.strip() else (selected_promotion if selected_promotion != "None" else "")
+        
+        # Image Tone Selection
+        st.markdown("**Image Settings:**")
+        image_tone = st.selectbox(
+            "Image Tone:",
+            ["professional", "warm", "playful", "dark", "elegant"],
+            help="Tone and style for AI-generated images"
+        )
+        
+        internal_links = st.text_area(
+            "Internal Links:",
+            placeholder="Link Text: /url\nAnother Link: /page",
+            height=60,
+            help="Format: Link Text: /url-path"
+        )
     
-    # Language selection
-    language = st.sidebar.selectbox(
-        "🌍 Language",
-        ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Dutch"],
-        help="Select the language for article generation"
-    )
-    
-    # Tone selection
-    tone = st.sidebar.selectbox(
-        "🎭 Tone",
-        ["Professional", "Conversational", "Academic", "Elegant", "Warm", "Technical", "Creative"],
-        help="Choose the writing tone for your article"
-    )
-    
-    # Focus/Angle
-    focus = st.sidebar.text_input(
-        "🎪 Focus/Angle",
-        placeholder="Latest trends and market analysis",
-        help="Specific angle or focus for the article"
-    )
-    
-    # Number of sections
-    sections = st.sidebar.slider(
-        "📚 Number of Sections",
-        min_value=3,
-        max_value=8,
-        value=5,
-        help="Number of H2 sections in the article"
-    )
-    
-    st.sidebar.markdown("### 🚀 Promotion & Links")
-    
-    # Promotional content
-    promotion = st.sidebar.text_area(
-        "📢 Promotional Content",
-        placeholder="Visit our Bitcoin trading platform for advanced analytics",
-        help="Optional promotional content to naturally integrate",
-        height=80
-    )
-    
-    # Internal links
-    internal_links = st.sidebar.text_area(
-        "🔗 Internal Links",
-        placeholder="Bitcoin Guide: /bitcoin-guide, Trading Tips: /trading-tips",
-        help="Format: Link Text: /url",
-        height=80
-    )
-    
-    st.sidebar.markdown("### ⚙️ Advanced Settings")
-    
-    # Word count
-    word_count = st.sidebar.slider(
-        "📄 Target Word Count",
-        min_value=300,
-        max_value=1500,
-        value=600,
-        step=50
-    )
-    
-    # Include images
-    include_images = st.sidebar.checkbox(
-        "🖼️ Generate AI Images (DALL-E 3)",
-        value=True,
-        help="Generate contextual images using OpenAI DALL-E 3. Disable if experiencing API issues."
-    )
-    
-    # SEO optimization
-    seo_focus = st.sidebar.checkbox(
-        "🔍 SEO Optimization",
-        value=True,
-        help="Enable advanced SEO optimization"
-    )
+    # Configuration Summary
+    with st.sidebar.container():
+        st.divider()
+        st.markdown("### Configuration Summary")
+        
+        # Calculate dynamic metrics
+        url_count = len([url.strip() for url in (url_input or '').split('\n') if url.strip()]) if url_input else 0
+        keyword_count = len([k.strip() for k in keywords.split('\n') if k.strip()]) if keywords else 0
+        
+        st.markdown(f"""
+        <div style="background-color: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <p style="color: #1e3a8a; margin: 0; line-height: 1.6;">
+                <strong>Language:</strong> {language}<br>
+                <strong>Tone:</strong> {tone} | <strong>Image Tone:</strong> {image_tone}<br>
+                <strong>Structure:</strong> {sections} sections, ~500 words<br>
+                <strong>Sources:</strong> {url_count} URLs, {keyword_count} keywords<br>
+                <strong>Promotion:</strong> {promotional_style} - {selected_promotion if selected_promotion != 'None' else 'Disabled'}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Reset Configuration Button
+        st.divider()
+        if st.button("🔄 Reset Configuration", help="Clear all settings", use_container_width=True):
+            st.rerun()
     
     return {
         "input_type": input_type,
@@ -1561,10 +209,15 @@ def create_sidebar():
         "language": language,
         "tone": tone,
         "focus": focus,
-        "sections": sections,
+        "additional_content": additional_content,
+        "sections": int(sections),
         "promotion": promotion,
+        "promotional_style": promotional_style,
+        "selected_promotion": selected_promotion,
+        "custom_promotion": custom_promotion,
+        "image_tone": image_tone,
         "internal_links": internal_links,
-        "word_count": word_count,
+        "word_count": int(word_count),
         "include_images": include_images,
         "seo_focus": seo_focus
     }
@@ -1579,16 +232,17 @@ def show_progress():
 
 def update_progress(message, progress):
     """Update progress bar and message"""
-    st.session_state.progress_placeholder.markdown(f"""
-    <div class="progress-container" style="margin-bottom: 0px;">
-        <h3 style="margin-bottom: 0px;">🪶 {message}</h3>
-    </div>
-    """, unsafe_allow_html=True)
-    st.session_state.progress_bar.progress(progress)
+    with st.session_state.progress_placeholder.container():
+        st.markdown(f"**Processing:** {message}")
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.session_state.progress_bar.progress(progress)
+        with col2:
+            st.caption(f"{int(progress * 100)}% Complete")
 
 def display_seo_metrics(seo_data):
-    """Display SEO metrics in a beautiful grid"""
-    st.markdown('<div class="seo-metrics">', unsafe_allow_html=True)
+    """Display SEO metrics"""
+    cols = st.columns(4)
     
     metrics = [
         ("Keyword Density", f"{seo_data.get('keyword_density', 0):.1f}%"),
@@ -1597,15 +251,9 @@ def display_seo_metrics(seo_data):
         ("SEO Score", f"{seo_data.get('seo_score', 0)}/100")
     ]
     
-    for label, value in metrics:
-        st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-value">{value}</div>
-            <div class="metric-label">{label}</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+    for i, (label, value) in enumerate(metrics):
+        with cols[i]:
+            st.metric(label, value)
 
 def initialize_session_state():
     """Initialize session state variables"""
@@ -1617,6 +265,8 @@ def initialize_session_state():
         st.session_state.images_data = None
     if 'exporter_instance' not in st.session_state:
         st.session_state.exporter_instance = None
+    if 'extraction_summary' not in st.session_state:
+        st.session_state.extraction_summary = None
 
 def main():
     """Main application function"""
@@ -1624,17 +274,15 @@ def main():
     # Initialize session state
     initialize_session_state()
     
-    # Load custom styling
-    load_custom_css()
-    
     # Create sidebar
     config = create_sidebar()
     
     # Main application header
-    st.markdown('<div class="main-header">', unsafe_allow_html=True)
-    st.markdown('<h1 class="main-title">🚀 AI Article Generator</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="main-subtitle">Transform Your Ideas Into Professional Articles with AI-Powered Content and Visuals</p>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.title("AI Content Studio")
+        st.markdown("**Professional Article Generation Platform**")
+
     
     # Check if OpenAI API key is configured
     openai_key = os.getenv("OPENAI_API_KEY")
@@ -1645,11 +293,36 @@ def main():
         st.info("💡 Your OpenAI API key enables both content generation (GPT-4) and image generation (DALL-E 3)")
         return
     
-    # Generate button
-    if st.button("✨ Generate Article", type="primary"):
+    st.divider()
+    
+    # Generation Controls
+    generate_ready = bool(config["keywords"] or config["url_input"])
+    
+    if not generate_ready:
+        st.warning("⚠️ Please configure keywords or provide a URL to proceed")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        generate_button = st.button(
+            "Generate Content", 
+            type="primary", 
+            disabled=not generate_ready,
+            help="Start AI content generation process",
+            use_container_width=True
+        )
+    
+    # Generate button logic
+    if generate_button:
         if not config["keywords"] and not config["url_input"]:
-            st.error("Please provide either keywords or a URL to analyze")
+            st.error("❌ Configuration Error: Please provide either keywords or a URL to analyze")
             return
+        
+        # Clear all previous session state data for fresh generation
+        st.session_state.article_data = None
+        st.session_state.seo_data = None
+        st.session_state.images_data = None
+        st.session_state.exporter_instance = None
+        st.session_state.extraction_summary = None
         
         # Initialize engines
         try:
@@ -1669,11 +342,52 @@ def main():
             # Step 1: Content Analysis
             update_progress("Analyzing content and preparing outline...", 0.15)
             if config["url_input"]:
-                # URL analysis mode
-                url_context = content_tools.extract_url_content(config["url_input"])
-                context = f"URL Analysis: {url_context}"
+                # Multi-URL batch processing mode with enhanced extraction
+                urls = [url.strip() for url in config["url_input"].split('\n') if url.strip()]
+                
+                update_progress(f"Batch processing {len(urls)} URL(s) with Jina API...", 0.05)
+                
+                # Use enhanced batch processing
+                extracted_contents = content_tools.extract_multiple_urls_content(urls, max_urls=5)
+                
+                # Combine extracted contents intelligently
+                combined_data = content_tools.combine_extracted_contents(extracted_contents)
+                
+                if combined_data['successful_extractions'] > 0:
+                    # Create comprehensive context for LLM
+                    context = f"""Multi-URL Analysis Results:
+Title: {combined_data['combined_title']}
+Sources Analyzed: {combined_data['source_count']}/{combined_data['total_urls_attempted']}
+Success Rate: {combined_data['success_rate']:.1f}%
+Extraction Methods: {', '.join(combined_data['extraction_methods'])}
+
+Combined Content:
+{combined_data['combined_content']}
+
+Key Topics Identified: {', '.join(combined_data['combined_keywords'][:10])}
+
+Source Summaries:
+{chr(10).join(combined_data['source_summaries'])}"""
+                    
+                    # Store extraction summary for later display but don't show during generation
+                    st.session_state.extraction_summary = {
+                        'urls_attempted': combined_data['total_urls_attempted'],
+                        'successful_extractions': combined_data['successful_extractions'],
+                        'success_rate': combined_data['success_rate'],
+                        'keywords_found': len(combined_data['combined_keywords']),
+                        'source_summaries': combined_data['source_summaries'],
+                        'extraction_methods': combined_data['extraction_methods']
+                    }
+                    
+                else:
+                    st.error("❌ No content could be extracted from any URLs. Using keywords instead.")
+                    context = f"Keywords: {config['keywords']}"
             else:
                 context = f"Keywords: {config['keywords']}"
+                
+            # Include additional content if provided
+            if config.get('additional_content'):
+                context += f"\n\nAdditional Inspiration Content: {config['additional_content']}"
             
             # Step 2: Generate Article Structure
             update_progress("Generating article content with GPT-4...", 0.35)
@@ -1686,6 +400,7 @@ def main():
                 sections=config["sections"],
                 word_count=config["word_count"],
                 promotion=config["promotion"],
+                promotional_style=config["promotional_style"],
                 seo_focus=config["seo_focus"]
             )
             
@@ -1702,7 +417,7 @@ def main():
                 update_progress("Creating AI-powered images with DALL-E 3...", 0.75)
                 images = image_engine.generate_images(
                     article_data,
-                    tone=config["tone"]
+                    tone=config["image_tone"]
                 )
                 
                 # Note: Image generation summary will be shown in the final content
@@ -1729,7 +444,9 @@ def main():
             # Clear progress indicators and show success
             st.session_state.progress_placeholder.empty()
             st.session_state.progress_bar.empty()
-            st.success("🎉 Article generated successfully!")
+            
+            # Professional completion notification
+            st.success("✅ Content generation completed successfully")
             
         except Exception as e:
             st.error(f"❌ An error occurred: {str(e)}")
@@ -1740,217 +457,149 @@ def main():
         display_generated_content()
     
 def display_generated_content():
-    """Display the generated content in tabs using session state data"""
+    """Display the generated content in simplified format"""
     if not st.session_state.article_data:
         return
 
-    # Create tabs for different views
-    tabs = ["📖 Preview", "📊 SEO Data", "💻 HTML View", "📥 Export"]
-    current_tabs = st.tabs(tabs)
-    
     enhanced_content = st.session_state.article_data
     seo_data = st.session_state.seo_data
     images = st.session_state.images_data
     exporter = st.session_state.exporter_instance
+    
+    # Generate slug programmatically from title
+    def generate_slug(title):
+        import re
+        slug = title.lower()
+        slug = re.sub(r'[^\w\s-]', '', slug)
+        slug = re.sub(r'\s+', '-', slug)
+        slug = re.sub(r'-+', '-', slug)
+        slug = slug.strip('-')
+        return slug[:50] if len(slug) > 50 else slug
+    
+    # Clean formatting
+    title_text = enhanced_content['title'].replace('**', '').strip()
+    meta_text = enhanced_content['meta_description'].replace('**', '').strip()
+    slug = generate_slug(title_text)
+    
+    # Display article information
+    st.markdown("## 📋 Article Information")
+    
+    # Article Title
+    st.markdown("### 📝 Article Title")
+    st.code(title_text, language='text')
+    
+    # Meta Description
+    st.markdown("### 📄 Meta Description")
+    st.code(meta_text, language='text')
+    
+    # Slug
+    st.markdown("### 🔗 URL Slug")
+    st.code(slug, language='text')
+    
+    # Article HTML Download
+    st.markdown("### 📥 Download Article")
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    
+    try:
+        html_content = exporter.generate_html(enhanced_content, seo_data, images)
+        html_filename = f"article_{timestamp}.html"
         
-    with current_tabs[0]:
-        # Article preview
-            st.markdown('<div class="generated-content">', unsafe_allow_html=True)
-            
-            # Watermark
-            generated_image_count = sum(1 for img in images.values() if not img.get('is_placeholder', False)) if images else 0
-            total_images = len(images) if images else 0
-            
-            if total_images > 0:
-                if generated_image_count == total_images:
-                    watermark_text = "✨ Generated by AI Writer — Powered by OpenAI GPT-4 & DALL-E 3 🎨"
-                elif generated_image_count > 0:
-                    watermark_text = f"✨ Generated by AI Writer — Content: GPT-4, Images: {generated_image_count}/{total_images} DALL-E 3 🎨"
-                else:
-                    watermark_text = "✨ Generated by AI Writer — Powered by OpenAI GPT-4 📝"
-            else:
-                watermark_text = "✨ Generated by AI Writer — Powered by OpenAI GPT-4 📝"
-            
-            st.markdown(f"""
-            <div class="ai-watermark">
-                {watermark_text}
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Title and meta
-            st.markdown(f"# {enhanced_content['title']}")
-            st.caption(f"📝 {enhanced_content['meta_description']}")
-            
-            # Article body with images
-            for i, section in enumerate(enhanced_content['sections']):
-                st.markdown(f"## {section['heading']}")
-                st.markdown(section['content'])
+        st.download_button(
+            label="📄 Download HTML Article",
+            data=html_content,
+            file_name=html_filename,
+            mime="text/html",
+            use_container_width=True
+        )
+    except Exception as e:
+        st.error(f"Error generating HTML: {e}")
+    
+    # Image Prompts Section
+    if enhanced_content and images:
+        st.markdown("---")
+        st.markdown("### 🎨 Generated Image Prompts")
+        
+        for i, (section_idx, image_data) in enumerate(images.items()):
+            with st.container():
+                col1, col2 = st.columns([1, 2])
                 
-                # Display generated image if available
-                if i in images:
-                    image_data = images[i]
-                    
-                    # Show image with status indicator
+                with col1:
+                    # Display the image
                     if image_data.get('is_placeholder', False):
-                        st.image(image_data['url'], caption=f"📷 {image_data['caption']} (Placeholder)", use_column_width=True)
-                        st.caption("💡 This is a placeholder image. DALL-E 3 was temporarily unavailable.")
+                        st.image(image_data['url'], use_container_width=True)
+                        st.caption("⚠️ Placeholder image")
                     else:
-                        st.image(image_data['url'], caption=f"🎨 {image_data['caption']} (Generated by DALL-E 3)", use_column_width=True)
-            
-            # CTA section
-            if enhanced_content.get('cta'):
-                st.markdown("---")
-                st.markdown(enhanced_content['cta'])
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-    with current_tabs[1]:
-        # Article Analytics Tab
-        if enhanced_content:
-            st.subheader("📈 Article Analytics")
-            
-            # Performance Metrics
-            metrics_col1, metrics_col2, metrics_col3 = st.columns(3)
-            
-            with metrics_col1:
-                st.metric("Word Count", len(enhanced_content.get('full_content', '').split()), "+12%")
-            
-            with metrics_col2:
-                readability_score = seo_data.get('readability_score', 78) if seo_data else 78
-                st.metric("Readability Score", f"{readability_score}/100", "+5%")
-            
-            with metrics_col3:
-                seo_score = seo_data.get('seo_score', 85) if seo_data else 85
-                st.metric("SEO Score", f"{seo_score}/100", "+8%")
-            
-            # SEO section
-            st.subheader("📊 SEO Analysis")
-            
-            seo_col1, seo_col2 = st.columns(2)
-            
-            with seo_col1:
-                st.markdown("**🎯 Primary Keywords**")
-                st.write(", ".join(seo_data.get('keywords', [])))
+                        st.image(image_data['url'], use_container_width=True)
                 
-                st.markdown("**🔍 SEO Score**")
-                seo_score = seo_data.get('seo_score', 85)
-                st.progress(seo_score / 100)
-                st.write(f"{seo_score}/100")
-            
-            with seo_col2:
-                st.markdown("**� Meta Description**")
-                st.write(enhanced_content['meta_description'])
+                with col2:
+                    # Display prompt and model info
+                    st.markdown("**Prompt:**")
+                    st.write(image_data.get('prompt', 'No prompt available'))
+                    
+                    st.markdown(f"**Model:** {image_data.get('model', 'DALL-E 3')}")
                 
-                st.markdown("**📊 Content Metrics**")
-                word_count = len(enhanced_content.get('full_content', '').split())
-                st.write(f"Words: {word_count}")
-                st.write(f"Sections: {len(enhanced_content.get('sections', []))}")
+                if i < len(images) - 1:  # Add separator except for last item
+                    st.markdown("---")
+    else:
+        st.info("No image prompts available. Generate an article with images enabled to see prompts.")
+
+        # Image Prompts view
+        if enhanced_content and images:
+            st.markdown("### 🎨 Generated Image Prompts")
+            st.markdown("Here are the AI-generated prompts used to create images for your article:")
             
-            # Tags
-            if seo_data.get('tags'):
-                st.markdown("**🏷️ Suggested Tags**")
-                tag_cols = st.columns(min(len(seo_data['tags']), 5))
-                for i, tag in enumerate(seo_data['tags'][:5]):
-                    with tag_cols[i]:
-                        st.markdown(f"`{tag}`")
-        else:
-            st.info("No analytics available. Generate an article first to see detailed analytics.")
-    
-    with current_tabs[2]:
-        # HTML view
-        if enhanced_content:
-            st.markdown("### 💻 HTML Export")
-            html_content = exporter.generate_html(enhanced_content, seo_data, images)
-            st.code(html_content, language='html')
+            for i, (section_idx, image_data) in enumerate(images.items()):
+                # section_idx may be 'cover' or an integer index
+                if isinstance(section_idx, str) and section_idx == 'cover':
+                    section_heading = 'Cover Image'
+                else:
+                    try:
+                        idx = int(section_idx)
+                        section = enhanced_content.get('sections', [])[idx] if idx < len(enhanced_content.get('sections', [])) else {}
+                        section_heading = section.get('heading', f'Section {idx + 1}')
+                    except Exception:
+                        section_heading = 'Image'
+                
+                with st.container():
+                    st.markdown(f"#### 🖼️ Image {i + 1}: {section_heading}")
+                    
+                    col1, col2 = st.columns([1, 1])
+                    
+                    with col1:
+                        # Display the image (no captions)
+                        if image_data.get('is_placeholder', False):
+                            st.image(image_data['url'], use_container_width=True)
+                            st.warning("⚠️ This is a placeholder. DALL-E was temporarily unavailable.")
+                        else:
+                            st.image(image_data['url'], use_container_width=True)
+                    
+                    with col2:
+                        # Display the prompt
+                        st.markdown("**Generated Prompt:**")
+                        st.code(image_data.get('prompt', 'No prompt available'), language='text')
+                        
+                        st.markdown("**Image Details:**")
+                        # captions removed per UX request
+                        st.write(f"• **Tone:** {image_data.get('tone', 'N/A')}")
+                        st.write(f"• **Model:** {image_data.get('model', 'DALL-E 3')}")
+                    
+                    st.markdown("---")
             
-            if st.button("📋 Copy HTML"):
-                st.success("HTML copied to clipboard!")
-        else:
-            st.info("No HTML content available. Generate an article first.")
-    
-    with current_tabs[3]:
-        # Export options
-        if enhanced_content:
-            st.markdown("### 📥 Export Options")
+            # Summary
+            generated_count = sum(1 for img in images.values() if not img.get('is_placeholder', False))
+            total_count = len(images)
             
-            # Generate files on-demand to prevent page refresh issues
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            
-            # On-demand file generation to prevent browser issues
-            st.info("Click buttons below to generate files. This prevents automatic generation that can cause page refresh issues.")
-            
-            # Initialize variables
-            html_content = None
-            docx_file = None
-            analytics_data = None
-            
-            # Generate HTML
-            with st.spinner("Generating HTML file..."):
-                try:
-                    html_content = exporter.generate_html(enhanced_content, seo_data, images)
-                    html_filename = f"article_{timestamp}.html"
-                except Exception as e:
-                    st.error(f"Error generating HTML: {e}")
-            
-            # Generate DOCX
-            with st.spinner("Generating Word document..."):
-                try:
-                    docx_file = exporter.generate_docx(enhanced_content, seo_data, images)
-                    docx_filename = f"article_{timestamp}.docx"
-                except Exception as e:
-                    st.error(f"Error generating DOCX: {e}")
-            
-            # Generate Analytics
-            try:
-                analytics_data = exporter.generate_analytics(enhanced_content, seo_data)
-                analytics_filename = f"analytics_{timestamp}.json"
-            except Exception as e:
-                st.error(f"Error generating analytics: {e}")
-                analytics_data = None
-            
-            # Create download buttons
+            st.markdown("### 📊 Image Generation Summary")
             col1, col2, col3 = st.columns(3)
-            
             with col1:
-                if docx_file:
-                    st.download_button(
-                        label="📄 Download Word Document",
-                        data=docx_file,
-                        file_name=docx_filename,
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                        key="download_docx"
-                    )
-                else:
-                    st.error("DOCX generation failed")
-            
+                st.metric("Total Images", total_count)
             with col2:
-                if html_content:
-                    st.download_button(
-                        label="🌐 Download HTML File",
-                        data=html_content,
-                        file_name=html_filename,
-                        mime="text/html",
-                        key="download_html"
-                    )
-                else:
-                    st.error("HTML generation failed")
-            
+                st.metric("Generated", generated_count)
             with col3:
-                if analytics_data:
-                    st.download_button(
-                        label="📊 Download Analytics JSON",
-                        data=analytics_data,
-                        file_name=analytics_filename,
-                        mime="application/json",
-                        key="download_analytics"
-                    )
-                else:
-                    st.error("Analytics generation failed")
-            
+                st.metric("Success Rate", f"{(generated_count/total_count*100):.1f}%" if total_count > 0 else "0%")
+        
         else:
-            st.info("No export options available. Generate an article first.")
-    
-    # Note: Recent projects section removed for cleaner interface
+            st.info("No image prompts available. Generate an article with images enabled to see prompts.")
 
 if __name__ == "__main__":
     main()
