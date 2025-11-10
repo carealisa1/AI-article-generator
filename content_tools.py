@@ -53,7 +53,7 @@ class ContentTools:
     
     def extract_multiple_urls_content(self, urls: List[str], max_urls: int = 5) -> List[Dict[str, Any]]:
         """
-        Batch process multiple URLs for content extraction with enhanced error handling
+        Batch process multiple URLs for content extraction with enhanced error handling and retry logic
         
         Args:
             urls: List of URLs to process
@@ -67,22 +67,30 @@ class ContentTools:
         
         for i, url in enumerate(urls[:max_urls]):
             try:
-                print(f"Processing URL {i+1}/{min(len(urls), max_urls)}: {url}")
+                print(f"📄 Processing URL {i+1}/{min(len(urls), max_urls)}: {url}")
                 
-                # Extract content from single URL
+                # Extract content from single URL with retry logic
                 content = self.extract_url_content(url)
                 
-                if content and content.get('main_content'):
+                if content and content.get('main_content') and len(content['main_content'].strip()) > 100:
                     # Add batch processing metadata
                     content['batch_index'] = i
                     content['total_in_batch'] = min(len(urls), max_urls)
                     content['processing_success'] = True
                     extracted_contents.append(content)
+                    print(f"✅ Successfully extracted {len(content['main_content'])} chars from {url}")
                 else:
-                    print(f"Warning: Limited content from {url}")
+                    print(f"⚠️ Warning: Limited or no content extracted from {url}")
+                    # Still add it but mark as limited content
+                    if content:
+                        content['batch_index'] = i
+                        content['total_in_batch'] = min(len(urls), max_urls)
+                        content['processing_success'] = False
+                        content['limited_content'] = True
+                        extracted_contents.append(content)
                     
             except Exception as e:
-                print(f"Error processing {url}: {e}")
+                print(f"❌ Error processing {url}: {e}")
                 # Add error entry for tracking
                 extracted_contents.append({
                     'url': url,
@@ -91,10 +99,15 @@ class ContentTools:
                     'processing_success': False,
                     'error': str(e),
                     'title': f"Failed extraction from {url}",
-                    'main_content': '',
+                    'main_content': f"Content extraction failed for {url}. Error: {str(e)}",
                     'extraction_method': 'failed'
                 })
                 continue
+        
+        # Summary
+        successful = len([c for c in extracted_contents if c.get('processing_success', False)])
+        total_attempted = len(urls[:max_urls])
+        print(f"📊 Batch processing complete: {successful}/{total_attempted} URLs successfully processed")
         
         return extracted_contents
     
@@ -175,45 +188,74 @@ class ContentTools:
         except Exception as e:
             print(f"Jina API extraction failed for {url}: {e}")
         
-        # Fallback to BeautifulSoup method
-        try:
-            # Fetch the webpage
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
-            
-            response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()
-            
-            # Parse HTML content
-            soup = BeautifulSoup(response.content, 'html.parser')
-            
-            # Extract structured data
-            extracted_data = {
-                'title': self._extract_title(soup),
-                'meta_description': self._extract_meta_description(soup),
-                'headings': self._extract_headings(soup),
-                'main_content': self._extract_main_content(soup),
-                'keywords': self._extract_keywords_from_content(soup),
-                'images': self._extract_images(soup, url),
-                'links': self._extract_links(soup, url),
-                'url': url,
-                'content_summary': '',
-                'extraction_method': 'beautifulsoup'
-            }
-            
-            # Generate content summary
-            extracted_data['content_summary'] = self._generate_content_summary(extracted_data)
-            
-            return extracted_data
-            
-        except requests.exceptions.RequestException as e:
-            print(f"Failed to fetch URL {url}: {e}")
-            return self._create_fallback_url_data(url)
+        # Fallback to BeautifulSoup method with retry logic
+        print("🔄 Falling back to BeautifulSoup extraction...")
         
-        except Exception as e:
-            print(f"Error processing URL {url}: {e}")
-            return self._create_fallback_url_data(url)
+        max_retries = 2
+        for attempt in range(max_retries):
+            try:
+                # Fetch the webpage
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    'Accept-Encoding': 'gzip, deflate',
+                    'Connection': 'keep-alive',
+                }
+                
+                timeout = 20 + (attempt * 10)  # 20s, 30s
+                print(f"BeautifulSoup attempt {attempt + 1}/{max_retries} with {timeout}s timeout")
+                
+                response = requests.get(url, headers=headers, timeout=timeout)
+                response.raise_for_status()
+                
+                # Parse HTML content
+                soup = BeautifulSoup(response.content, 'html.parser')
+                
+                # Extract structured data
+                extracted_data = {
+                    'title': self._extract_title(soup),
+                    'meta_description': self._extract_meta_description(soup),
+                    'headings': self._extract_headings(soup),
+                    'main_content': self._extract_main_content(soup),
+                    'keywords': self._extract_keywords_from_content(soup),
+                    'images': self._extract_images(soup, url),
+                    'links': self._extract_links(soup, url),
+                    'url': url,
+                    'content_summary': '',
+                    'extraction_method': 'beautifulsoup'
+                }
+                
+                # Generate content summary
+                extracted_data['content_summary'] = self._generate_content_summary(extracted_data)
+                
+                print(f"✅ BeautifulSoup success on attempt {attempt + 1}")
+                return extracted_data
+                
+            except requests.exceptions.Timeout as e:
+                print(f"⏱️ BeautifulSoup timeout on attempt {attempt + 1}/{max_retries}: {e}")
+                if attempt < max_retries - 1:
+                    print(f"🔄 Retrying BeautifulSoup in 2 seconds...")
+                    time.sleep(2)
+                    continue
+                else:
+                    print(f"❌ All BeautifulSoup attempts timed out")
+                    
+            except requests.exceptions.RequestException as e:
+                print(f"🌐 BeautifulSoup request failed on attempt {attempt + 1}: {e}")
+                if attempt < max_retries - 1:
+                    print(f"🔄 Retrying BeautifulSoup in 2 seconds...")
+                    time.sleep(2)
+                    continue
+                else:
+                    print(f"❌ All BeautifulSoup attempts failed")
+                    
+            except Exception as e:
+                print(f"❌ BeautifulSoup processing error: {e}")
+                break
+        
+        print("⚠️ All extraction methods failed, returning fallback data")
+        return self._create_fallback_url_data(url)
     
     def _extract_title(self, soup: BeautifulSoup) -> str:
         """Extract page title"""
@@ -258,49 +300,81 @@ class ContentTools:
     
     def _extract_with_jina_api(self, url: str) -> Dict[str, Any]:
         """
-        Extract content using Jina REST API for better content extraction
+        Extract content using Jina REST API with retry logic and timeout handling
         """
         
-        try:
-            # Jina Reader API endpoint
-            jina_url = f"https://r.jina.ai/{url}"
-            
-            headers = {
-                'Accept': 'application/json',
-                'User-Agent': 'AI-Article-Generator/1.0'
-            }
-            
-            # Make request to Jina API
-            response = requests.get(jina_url, headers=headers, timeout=15)
-            response.raise_for_status()
-            
-            # Parse response
-            if response.headers.get('content-type', '').startswith('application/json'):
-                jina_data = response.json()
-            else:
-                # If response is plain text, structure it
-                content_text = response.text
-                jina_data = {
-                    'data': {
-                        'title': self._extract_title_from_text(content_text),
-                        'content': content_text,
-                        'description': '',
-                        'url': url
-                    }
+        max_retries = 3
+        base_timeout = 15
+        backoff_factor = 2
+        
+        for attempt in range(max_retries):
+            try:
+                # Jina Reader API endpoint
+                jina_url = f"https://r.jina.ai/{url}"
+                
+                headers = {
+                    'Accept': 'application/json',
+                    'User-Agent': 'AI-Article-Generator/1.0'
                 }
-            
-            # Extract and structure the data
-            extracted_data = self._process_jina_response(jina_data, url)
-            extracted_data['extraction_method'] = 'jina_api'
-            
-            return extracted_data
-            
-        except requests.exceptions.RequestException as e:
-            print(f"Jina API request failed: {e}")
-            return None
-        except Exception as e:
-            print(f"Jina API processing error: {e}")
-            return None
+                
+                # Calculate timeout for this attempt (increasing with retries)
+                timeout = base_timeout + (attempt * 10)  # 15s, 25s, 35s
+                
+                print(f"Jina API attempt {attempt + 1}/{max_retries} with {timeout}s timeout")
+                
+                # Make request to Jina API
+                response = requests.get(jina_url, headers=headers, timeout=timeout)
+                response.raise_for_status()
+                
+                # Parse response
+                if response.headers.get('content-type', '').startswith('application/json'):
+                    jina_data = response.json()
+                else:
+                    # If response is plain text, structure it
+                    content_text = response.text
+                    jina_data = {
+                        'data': {
+                            'title': self._extract_title_from_text(content_text),
+                            'content': content_text,
+                            'description': '',
+                            'url': url
+                        }
+                    }
+                
+                # Extract and structure the data
+                extracted_data = self._process_jina_response(jina_data, url)
+                extracted_data['extraction_method'] = 'jina_api'
+                
+                print(f"✅ Jina API success on attempt {attempt + 1}")
+                return extracted_data
+                
+            except requests.exceptions.Timeout as e:
+                print(f"⏱️ Jina API timeout on attempt {attempt + 1}/{max_retries}: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = backoff_factor ** attempt
+                    print(f"🔄 Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"❌ All {max_retries} Jina API attempts timed out, falling back to BeautifulSoup")
+                    return None
+                    
+            except requests.exceptions.RequestException as e:
+                print(f"🌐 Jina API request failed on attempt {attempt + 1}: {e}")
+                if attempt < max_retries - 1:
+                    wait_time = backoff_factor ** attempt
+                    print(f"🔄 Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"❌ All {max_retries} Jina API attempts failed")
+                    return None
+                    
+            except Exception as e:
+                print(f"❌ Jina API processing error: {e}")
+                return None
+        
+        return None
     
     def _process_jina_response(self, jina_data: Dict, url: str) -> Dict[str, Any]:
         """

@@ -528,30 +528,46 @@ class Exporter:
     ) -> str:
         """Generate HTML for article sections"""
         
-        sections_html = []
+        # Check if the full article content has HTML links (indicates link integration)
+        full_content = article_data.get('content', '')
+        has_integrated_links = '<a href=' in full_content
         
-        for i, section in enumerate(article_data.get('sections', [])):
-            section_html = []
+        if has_integrated_links:
+            # Use the full content with integrated links instead of sections
+            print("🔗 Exporter: Using full content with integrated links for HTML generation")
             
-            # Section wrapper
-            section_html.append('<div class="content-section">')
+            # Process the full content that contains integrated links with proper formatting
+            processed_content = self._process_full_content_with_links(full_content)
             
-            # Heading
-            if section.get('heading'):
-                section_html.append(f'<h2 class="section-heading">{section["heading"]}</h2>')
-            
-            # Content
-            if section.get('content'):
-                # Process content (convert simple formatting)
-                content = self._process_html_content(section['content'])
-                section_html.append(f'<div class="section-content">{content}</div>')
-            
-            # (Per-section images removed — exporter uses single cover image only)
-            
-            section_html.append('</div>')
-            sections_html.append('\n'.join(section_html))
+            # Wrap in a single content section
+            return f'<div class="content-section"><div class="section-content">{processed_content}</div></div>'
         
-        return '\n\n'.join(sections_html)
+        else:
+            # Use original section-by-section processing
+            sections_html = []
+            
+            for i, section in enumerate(article_data.get('sections', [])):
+                section_html = []
+                
+                # Section wrapper
+                section_html.append('<div class="content-section">')
+                
+                # Heading
+                if section.get('heading'):
+                    section_html.append(f'<h2 class="section-heading">{section["heading"]}</h2>')
+                
+                # Content
+                if section.get('content'):
+                    # Process content (convert simple formatting)
+                    content = self._process_html_content(section['content'])
+                    section_html.append(f'<div class="section-content">{content}</div>')
+                
+                # (Per-section images removed — exporter uses single cover image only)
+                
+                section_html.append('</div>')
+                sections_html.append('\n'.join(section_html))
+            
+            return '\n\n'.join(sections_html)
 
     def _generate_cover_html(self, images: Optional[Dict[Any, Dict[str, str]]]) -> str:
         """Generate HTML for the single cover image (no caption)."""
@@ -578,24 +594,103 @@ class Exporter:
         return image_html
     
     def _process_html_content(self, content: str) -> str:
-        """Process and clean content for HTML output"""
+        """Process and clean content for HTML output, preserving HTML links"""
         
-        # Clean up markdown formatting issues
+        # Clean up markdown formatting issues but preserve HTML links
         content = content.replace('**', '').strip()
         
-        # Wrap paragraphs
-        paragraphs = content.split('\n\n')
+        # If content already contains HTML tags (like links), handle it more carefully
+        if '<a href=' in content or '<img' in content or '<strong>' in content:
+            # Content already has HTML formatting, preserve it and just ensure proper paragraph structure
+            
+            # First, check if content is already properly structured with <p> tags
+            if '<p>' in content and '</p>' in content:
+                # Content already has paragraph structure, return as-is
+                return content
+            
+            # Split by double newlines for natural paragraphs
+            if '\n\n' in content:
+                paragraphs = content.split('\n\n')
+            else:
+                # If no double newlines, treat the whole content as one paragraph
+                # but preserve internal structure
+                paragraphs = [content]
+        else:
+            # No HTML formatting, use original logic
+            paragraphs = content.split('\n\n')
+        
         processed_paragraphs = []
         
         for para in paragraphs:
             para = para.strip()
             if para:
-                # Don't double-wrap if already has paragraph tags
-                if not para.startswith('<p'):
-                    para = f'<p>{para}</p>'
-                processed_paragraphs.append(para)
+                # Don't double-wrap if already has paragraph tags or is a heading
+                if not para.startswith('<p') and not para.startswith('<h') and not para.startswith('<div'):
+                    # Check if paragraph contains HTML tags that should not be wrapped
+                    if '<li>' in para or '<ul>' in para or '<ol>' in para or '<blockquote>' in para:
+                        # List or blockquote content, don't wrap in <p>
+                        processed_paragraphs.append(para)
+                    else:
+                        # Regular paragraph content, wrap in <p> tags
+                        para = f'<p>{para}</p>'
+                        processed_paragraphs.append(para)
+                else:
+                    processed_paragraphs.append(para)
         
-        return '\n'.join(processed_paragraphs)
+        result = '\n'.join(processed_paragraphs)
+        
+        # Debug logging to track content processing
+        link_count_before = content.count('<a href=')
+        link_count_after = result.count('<a href=')
+        print(f"📄 HTML Content Processing: {link_count_before} links → {link_count_after} links")
+        
+        return result
+    
+    def _process_full_content_with_links(self, content: str) -> str:
+        """Process full content with integrated links, handling markdown formatting properly"""
+        import re
+        
+        # Clean up any markdown formatting but preserve HTML links
+        content = content.replace('**', '').strip()
+        
+        # Split by markdown headings and process each section
+        sections = re.split(r'^##\s+(.+)$', content, flags=re.MULTILINE)
+        
+        # First section is usually intro content before first heading
+        processed_sections = []
+        
+        for i, section in enumerate(sections):
+            section = section.strip()
+            if not section:
+                continue
+                
+            if i == 0:
+                # First section - intro content
+                if section:
+                    paragraphs = section.split('\n\n')
+                    for para in paragraphs:
+                        para = para.strip()
+                        if para:
+                            processed_sections.append(f'<p>{para}</p>')
+            elif i % 2 == 1:
+                # Odd indices are headings
+                processed_sections.append(f'<h2 class="section-heading">{section}</h2>')
+            else:
+                # Even indices are content after headings
+                paragraphs = section.split('\n\n')
+                for para in paragraphs:
+                    para = para.strip()
+                    if para:
+                        processed_sections.append(f'<p>{para}</p>')
+        
+        result = '\n'.join(processed_sections)
+        
+        # Debug logging
+        link_count = result.count('<a href=')
+        heading_count = result.count('<h2')
+        print(f"📄 Full Content Processing: {link_count} links preserved, {heading_count} headings formatted")
+        
+        return result
     
     def _generate_image_html(self, image_data: Dict[str, str]) -> str:
         """Generate HTML for image display"""

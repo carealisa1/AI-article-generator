@@ -40,8 +40,7 @@ class LLMEngine:
         self.client = OpenAI(api_key=api_key)
             
         self.max_tokens = int(os.getenv("MAX_TOKENS", 4000))
-        self.temperature = float(os.getenv("TEMPERATURE", 0.7))
-        self.model = "gpt-4o-mini" # Using the latest model
+        self.model = "gpt-5" # Using the latest model
         
     def generate_article(
         self, 
@@ -118,17 +117,30 @@ class LLMEngine:
         )
         
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
+            # Use the correct parameter for GPT-5
+            completion_params = {
+                "model": self.model,
+                "messages": [
                     {
                         "role": "system", 
-                        "content": """You are an expert content writer who creates high-quality, SEO-optimized articles. 
+                        "content": """You are a versatile expert content writer with specialized expertise in finance and cryptocurrency, capable of creating high-quality, SEO-optimized articles on any topic. 
+
+CORE EXPERTISE AREAS:
+- Finance & Cryptocurrency: Markets, blockchain, digital assets, trading strategies, investment analysis, DeFi protocols, regulatory developments, technical/fundamental analysis
+- General Content: Technology, health, education, lifestyle, business, marketing, science, and all other topics with equal proficiency
+
+ADAPTIVE WRITING APPROACH:
+- For finance/crypto topics: Apply deep domain expertise with market insights, data analysis, and professional guidance
+- For other topics: Write with appropriate subject matter expertise without forcing financial context
+- Always match the tone, depth, and expertise level appropriate to the specific topic requested
+
+You provide authoritative, well-researched content tailored to each subject while maintaining consistent quality across all domains.
 
 CRITICAL ARTICLE REQUIREMENTS - MUST FOLLOW EXACTLY:
 - Write the EXACT number of sections requested (no more, no less)
 - Reach the EXACT target word count specified 
 - Each section must be substantial and meet word count expectations
+- MAINTAIN 80/20 CONTENT RATIO: 80% based on source material, 20% original insights/analysis
 - Write clean, natural content without ** bold markers or formatting symbols
 - Never use artificial labels like "Title:", "Meta Description:", "Section 1"
 - Create specific, descriptive headings that tell readers exactly what each section covers
@@ -156,8 +168,8 @@ CONTENT STRUCTURE:
 6. End with a natural conclusion - NO SEO analysis or metadata
 
 WORD COUNT ENFORCEMENT:
-- If requesting 1 section with 500 words, write 500 words in that section
-- If requesting 3 sections with 500 words, write ~167 words per section
+- If requesting 1 section with 800 words, write 800 words in that section
+- If requesting 3 sections with 800 words, write ~267 words per section
 - Always meet or exceed the minimum word count specified
 - Each section should be comprehensive and detailed
 
@@ -174,16 +186,18 @@ QUALITY STANDARDS:
 - Create content that flows logically from section to section
 - Include specific examples and actionable insights
 - End with practical conclusions or next steps
+- MAINTAIN CONTENT BALANCE: Base 80% of content on provided source material, add 20% original analysis
+- BLEND SOURCE AND INSIGHTS: Weave factual source content with strategic insights seamlessly
+- ADD VALUE: Use your expertise to interpret, analyze, and expand on source information
 - Write ONLY the article content that readers should see"""
                     },
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=self.max_tokens,
-                temperature=0.6,  # Slightly lower for more structured output
-                presence_penalty=0.1,
-                frequency_penalty=0.1
-            )
+
+            }
             
+            response = self.client.chat.completions.create(**completion_params)
+
             return response.choices[0].message.content.strip()
             
         except Exception as e:
@@ -209,13 +223,44 @@ QUALITY STANDARDS:
         
         keyword_str = ', '.join(keywords) if keywords else "general topic"
         primary_kw = keywords[0] if keywords else "topic"
-        word_count += 150
         # Calculate words per section for balanced content
         intro_words = 50  # Brief introduction
         words_per_section = max(80, (word_count - intro_words) // sections)
         
         # Build context analysis
         context_type = "URL content analysis" if "Multi-URL Analysis" in context else "keyword-based content"
+        
+        # Detect if this is finance/crypto content and add specialized guidance
+        domain_expertise = ""
+        finance_crypto_keywords = ['bitcoin', 'crypto', 'cryptocurrency', 'blockchain', 'defi', 'nft', 'trading', 'investment', 'finance', 'financial', 'market', 'price', 'altcoin', 'ethereum', 'binance', 'wallet', 'exchange', 'staking', 'mining', 'portfolio', 'stocks', 'forex']
+        
+        # Check if any finance/crypto keywords are present
+        all_keywords_text = ' '.join(keywords).lower()
+        is_finance_crypto_topic = any(keyword.lower() in all_keywords_text for keyword in finance_crypto_keywords)
+        
+        if is_finance_crypto_topic:
+            domain_expertise = f"""
+        *** FINANCE/CRYPTO EXPERTISE MODE ACTIVATED ***:
+        This topic relates to finance or cryptocurrency. Apply your specialized knowledge:
+        - Provide accurate market analysis and technical insights
+        - Include relevant financial metrics, price movements, and market trends  
+        - Reference current regulatory developments and institutional adoption when relevant
+        - Explain complex financial/crypto concepts in accessible terms
+        - Offer practical investment guidance and risk management strategies
+        - Connect topics to broader economic trends and market psychology
+        - Use appropriate financial terminology while remaining accessible
+        - Cite relevant market data, trading volumes, and performance metrics when applicable
+        """
+        else:
+            domain_expertise = f"""
+        *** GENERAL EXPERTISE MODE ***:
+        This topic is outside finance/crypto. Write as a subject matter expert in the relevant field:
+        - Focus purely on the topic at hand without forcing financial context
+        - Apply appropriate expertise for the specific subject area
+        - Use terminology and concepts relevant to this particular domain
+        - Provide valuable insights specific to this topic without financial references
+        - Maintain professional quality while staying completely on-topic
+        """
         
         # Create specific focus instructions
         focus_instruction = ""
@@ -227,27 +272,63 @@ QUALITY STANDARDS:
         - Use {focus} as the primary lens for analyzing {primary_kw}
         """
         
-        # Create promotional integration strategy
+        # Create promotional integration strategy using client-specific templates
         promotion_strategy = ""
         if promotion and promotional_style != "No Promotion":
             if promotional_style == "CTA only":
                 promotion_strategy = f"""
-        PROMOTIONAL CONTENT INTEGRATION:
-        - Product/Service: {promotion}
-        - Integration Style: Call-to-Action Only
-        - Placement: End of article as natural CTA
-        - Approach: Subtle recommendation in conclusion
-        - Format: "For more insights on [topic], consider exploring {promotion}"
+        *** PROMOTIONAL CONTENT INTEGRATION - CTA ONLY TEMPLATE ***:
+        
+        MANDATORY STRUCTURE AT END OF ARTICLE:
+        
+        Section 1 (Informative Transition + Insight):
+        - Write H2 heading about {promotion} following market trends and relating to main article topic
+        - Start with 1 sentence referencing the article's topic to create natural flow
+        - Add 1-5 educational sentences about {promotion} (latest updates, market relevance, ecosystem growth)
+        - Tone: Factual, educational, consistent with article - NOT overly promotional
+        - Focus on project insights, technology, or market position
+        
+        Section 2 (Simple CTA):
+        - Write EXACTLY this format (optimize wording for natural flow):
+        "Visit the {promotion} official website."
+        
+        CRITICAL REQUIREMENTS:
+        - Language: {language}
+        - Style: Human, natural writing that flows from main content
+        - Educational focus, not advertisement-like
+        - Must feel like natural continuation of article, not unrelated ad
+        - Keep factual and informative tone throughout
         """
             elif promotional_style == "Full Section + CTA":
                 promotion_strategy = f"""
-        PROMOTIONAL CONTENT INTEGRATION:
-        - Product/Service: {promotion}
-        - Integration Style: Dedicated Section + CTA
-        - Placement: One dedicated section + conclusion mention
-        - Section Focus: Educational content about {promotion} as it relates to {primary_kw}
-        - Approach: Present as relevant solution/tool, maintain educational value
-        - CTA: Include natural call-to-action at the end
+        *** PROMOTIONAL CONTENT INTEGRATION - FULL SECTION + CTA TEMPLATE ***:
+        
+        MANDATORY STRUCTURE AT END OF ARTICLE:
+        
+        Section 1 (Informative Transition + Insight):
+        - Write H2 heading about {promotion} following market trends and relating to main article topic
+        - Start with 1 sentence referencing the article's topic to create natural flow
+        - Add 1-5 educational sentences about {promotion} (latest updates, market relevance, ecosystem growth)
+        - Tone: Factual, educational, consistent with article - NOT overly promotional
+        - Focus on project insights, technology, or market position
+        
+        Section 2 (Informative CTA - EXACT FORMAT REQUIRED):
+        Write this section using EXACTLY this structure (optimize wording to fit article naturally):
+        
+        "If you're considering {promotion}, read our {promotion} price analysis and be sure to check out our step-by-step guide to buying {promotion} to build confidence and plan more accurately.
+
+        Stay updated on the latest news via the {promotion} official website, X (Twitter), and Telegram channels.
+
+        Visit the {promotion} official website."
+        
+        CRITICAL REQUIREMENTS:
+        - Language: {language}
+        - Style: Human, natural writing that flows from main content
+        - Educational focus, not advertisement-like
+        - Must feel like natural continuation of article, not unrelated ad
+        - Keep all key elements (price analysis, buying guide, official links)
+        - Make it sound relevant and informative
+        - Maintain factual tone throughout
         """
         
         # Create dynamic section heading examples based on keywords
@@ -276,6 +357,8 @@ QUALITY STANDARDS:
 
         SOURCE CONTEXT: {context}
 
+        {domain_expertise}
+
         ARTICLE SPECIFICATIONS:
         - Primary Keyword: {primary_kw}
         - Target Keywords: {keyword_str}
@@ -284,6 +367,14 @@ QUALITY STANDARDS:
         - *** CRITICAL *** Target Length: {word_count} words TOTAL (YOU MUST WRITE EXACTLY THIS AMOUNT)
         - *** CRITICAL *** Section Count: EXACTLY {sections} section{'s' if sections != 1 else ''} - NO MORE, NO LESS
         - *** CRITICAL *** Words per section: ~{words_per_section} words each (COUNT YOUR WORDS AS YOU WRITE)
+
+        *** CRITICAL CONTENT RATIO REQUIREMENT ***:
+        - MAINTAIN 80% SOURCE-BASED CONTENT: Build the majority of your content directly from the provided source context
+        - ADD 20% NEW INSIGHTS: Include your own analysis, interpretations, predictions, or strategic insights
+        - SOURCE CONTENT (80%): Use facts, data, quotes, and information from the provided context
+        - NEW INSIGHTS (20%): Add expert analysis, future implications, strategic recommendations, or original perspectives
+        - BLEND NATURALLY: Don't separate source content and insights - weave them together seamlessly
+        - ATTRIBUTION: When appropriate, reference "recent analysis" or "current trends" for source material
 
         {seo_instructions}
 
@@ -438,18 +529,25 @@ QUALITY STANDARDS:
         )
         
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
+            # Use the correct parameter for GPT-5
+            completion_params = {
+                "model": self.model,
+                "messages": [
                     {
                         "role": "system",
-                        "content": "You are an expert content creator. Generate high-quality, engaging articles that provide real value to readers."
+                        "content": "You are an expert content creator with specialized knowledge in finance and cryptocurrency, equally capable of producing high-quality articles across all topics. For finance/crypto topics, apply deep market expertise and industry insights. For other topics, write with appropriate subject matter expertise without forcing financial context. Always match your expertise level and terminology to the specific subject being covered."
                     },
                     {"role": "user", "content": prompt}
-                ],
-                max_tokens=self.max_tokens,
-                temperature=self.temperature
-            )
+                ]
+            }
+            
+            # Use max_completion_tokens for GPT-5, max_tokens for older models
+            if self.model.startswith("gpt-5"):
+                completion_params["max_completion_tokens"] = self.max_tokens
+            else:
+                completion_params["max_tokens"] = self.max_tokens
+            
+            response = self.client.chat.completions.create(**completion_params)
             
             content = response.choices[0].message.content.strip()
             return self._parse_article_content(content, keywords, language, tone, sections)
@@ -922,6 +1020,77 @@ QUALITY STANDARDS:
         return cta_options[hash(title) % len(cta_options)]
     
 
+    
+    def generate_link_integration(self, prompt: str) -> str:
+        """Generate updated article content with integrated links using AI"""
+        
+        try:
+            print(f"   🤖 Using model: {self.model}")
+            print(f"   📏 Prompt length: {len(prompt)} characters")
+            
+            start_time = time.time()
+            print(f"   ⏳ Waiting for AI response...")
+            
+            completion_params = {
+                "model": self.model,
+                "messages": [
+                    {
+                        "role": "system", 
+                        "content": """You are an expert content editor with specialized knowledge in finance and cryptocurrency, capable of expertly handling link integration across all topics and industries.
+
+SPECIALIZED EXPERTISE:
+- Finance & Crypto: Deep knowledge in markets, blockchain, trading, DeFi, investment strategies, and regulatory developments
+- General Content: Proficient in technology, health, education, lifestyle, business, and all other subject areas
+
+ADAPTIVE LINK INTEGRATION:
+- For finance/crypto content: Apply domain expertise to ensure financial relevance and accuracy
+- For other topics: Use appropriate subject matter knowledge without forcing financial context
+- Always prioritize content relevance and reader value regardless of topic
+
+Your task is to intelligently place links within existing content using appropriate domain knowledge to ensure maximum relevance and value.
+
+CRITICAL REQUIREMENTS:
+1. Preserve ALL existing content structure, formatting, and quality
+2. Only integrate links where they add genuine value to readers
+3. Use natural, contextual anchor text that fits seamlessly into sentences
+4. Maintain article flow and readability
+5. Return the complete article with links integrated in HTML format
+6. Do not remove or significantly alter existing content
+7. Place links strategically where they support or enhance the content being discussed
+
+LINK INTEGRATION GUIDELINES:
+- Use descriptive anchor text that clearly indicates what the link is about
+- Integrate links within relevant paragraphs and sentences
+- Avoid cramming multiple links in one sentence
+- Ensure links feel natural and not forced
+- Maintain the professional tone and quality of the original content
+- ALWAYS use target="_blank" attribute to open links in new tabs
+
+OUTPUT FORMAT:
+Return the complete article content with links integrated using HTML <a href="URL" target="_blank">anchor text</a> format. ALWAYS include target="_blank" to ensure links open in new browser tabs."""
+                    },
+                    {"role": "user", "content": prompt}
+                ]
+            }
+            
+            print("   ⏳ Waiting for AI response...")
+            start_time = time.time()
+            
+            response = self.client.chat.completions.create(**completion_params)
+            
+            processing_time = time.time() - start_time
+            response_content = response.choices[0].message.content.strip()
+            
+            print(f"   ✅ AI processing completed in {processing_time:.2f}s")
+            print(f"   📏 Response length: {len(response_content)} characters")
+            print(f"   🔗 Links found in response: {response_content.count('<a href=')}")
+            
+            return response_content
+            
+        except Exception as e:
+            print(f"   ❌ Link integration API error: {e}")
+            print(f"   🔍 Error details: {type(e).__name__}")
+            return ""
     
     def _generate_fallback_content(self, keywords: List[str], language: str, tone: str) -> Dict[str, Any]:
         """Generate fallback content when all else fails"""
