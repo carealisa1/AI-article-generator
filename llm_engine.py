@@ -42,6 +42,46 @@ class LLMEngine:
         self.max_tokens = int(os.getenv("MAX_TOKENS", 4000))
         self.model = "gpt-5" # Using the latest model
         
+        # Custom tone profiles for specialized content (matching website options)
+        self.custom_tone_profiles = {
+            "Professional": {
+                "personality": "Professional, informative, and authoritative tone suitable for business and formal content.",
+                "writing_style": "professional_formal",
+                "target_audience": "business professionals",
+                "voice_characteristics": [
+                    "Formal and structured",
+                    "Industry-standard terminology",
+                    "Objective and factual",
+                    "Clear and concise"
+                ]
+            },
+            "Casual": {
+                "personality": "Friendly, conversational, and approachable tone for general audiences.",
+                "writing_style": "casual_friendly",
+                "target_audience": "general readers",
+                "voice_characteristics": [
+                    "Relaxed and friendly",
+                    "Easy to understand",
+                    "Engaging and relatable",
+                    "Uses everyday language"
+                ]
+            }
+        }
+        
+        # Store client's crypto personality requirements (applied automatically for crypto topics)
+        self.crypto_personality_template = """Write as an authoritative source covering cryptocurrency-related topics. Use a casual and personable tone and include slang specific to crypto to make your content relatable to the target audience (cryptocurrency enthusiasts). Be talkative and conversational. Use quick and clever humor when appropriate. Address the reader in the second person singular but never refer to yourself or ask questions directly."""
+    
+    def get_available_tones(self) -> List[str]:
+        """Get list of available tone profiles"""
+        return list(self.custom_tone_profiles.keys())
+    
+    def get_tone_description(self, tone: str) -> str:
+        """Get description of a specific tone profile"""
+        if tone in self.custom_tone_profiles:
+            profile = self.custom_tone_profiles[tone]
+            return f"{profile['personality']} (Target: {profile['target_audience']})"
+        return "Standard tone profile"
+        
     def generate_article(
         self, 
         context: str, 
@@ -90,10 +130,8 @@ class LLMEngine:
         except Exception as e:
             # Fallback to single-pass generation
             print(f"Multi-pass generation failed, falling back to single pass: {e}")
-            return self._generate_single_pass(
-                context, keyword_list, language, tone, focus, 
-                sections, word_count, promotion, promotional_style
-            )
+            # Ultimate fallback - return structured placeholder
+            return self._generate_fallback_content(keywords, language, tone)
     
     def _generate_draft(
         self, 
@@ -116,80 +154,34 @@ class LLMEngine:
             sections, word_count, promotion, promotional_style, seo_focus
         )
         
+        # Always apply crypto expert tone as per client requirements
+        is_crypto_topic = True  # Client requirement: Always use crypto expert personality
+        
         try:
+            # Build enhanced system prompt with custom personality
+            system_prompt = self._build_enhanced_system_prompt(tone, is_crypto_topic)
+            
+            # DEBUG: Print system and user prompts
+            print("\n" + "="*80)
+            print("🤖 DEBUG: AI PROMPTS")
+            print("="*80)
+            print(f"Is Crypto Topic: {is_crypto_topic}")
+            print(f"Tone: {tone}")
+            print("\n📝 SYSTEM PROMPT:")
+            print("-" * 40)
+            print(system_prompt)
+            print("\n💬 USER PROMPT:")
+            print("-" * 40)
+            print(prompt[:1000] + "..." if len(prompt) > 1000 else prompt)
+            print("="*80 + "\n")
+            
             # Use the correct parameter for GPT-5
             completion_params = {
                 "model": self.model,
                 "messages": [
                     {
                         "role": "system", 
-                        "content": """You are a versatile expert content writer with specialized expertise in finance and cryptocurrency, capable of creating high-quality, SEO-optimized articles on any topic. 
-
-CORE EXPERTISE AREAS:
-- Finance & Cryptocurrency: Markets, blockchain, digital assets, trading strategies, investment analysis, DeFi protocols, regulatory developments, technical/fundamental analysis
-- General Content: Technology, health, education, lifestyle, business, marketing, science, and all other topics with equal proficiency
-
-ADAPTIVE WRITING APPROACH:
-- For finance/crypto topics: Apply deep domain expertise with market insights, data analysis, and professional guidance
-- For other topics: Write with appropriate subject matter expertise without forcing financial context
-- Always match the tone, depth, and expertise level appropriate to the specific topic requested
-
-You provide authoritative, well-researched content tailored to each subject while maintaining consistent quality across all domains.
-
-CRITICAL ARTICLE REQUIREMENTS - MUST FOLLOW EXACTLY:
-- Write the EXACT number of sections requested (no more, no less)
-- Reach the EXACT target word count specified 
-- Each section must be substantial and meet word count expectations
-- MAINTAIN 80/20 CONTENT RATIO: 80% based on source material, 20% original insights/analysis
-- Write clean, natural content without ** bold markers or formatting symbols
-- Never use artificial labels like "Title:", "Meta Description:", "Section 1"
-- Create specific, descriptive headings that tell readers exactly what each section covers
-- Use ## for section headings only (no other markdown formatting)
-- Write naturally flowing content that provides genuine value
-- NEVER include SEO metadata, analysis, or technical notes in the article content
-
-SEO OPTIMIZATION REQUIREMENTS (BUILT INTO CONTENT):
-- Include primary keyword in title
-- Use all target keywords naturally and organically throughout the content
-- Keep sentences clear and concise (average 15-20 words)
-- Create engaging, descriptive section headings that include relevant keywords when natural
-- Maintain logical content flow with smooth transitions between paragraphs
-- Write compelling introduction that hooks readers and includes primary keyword
-- End with strong conclusion that reinforces main points and includes primary keyword
-- Ensure keyword density feels natural (no keyword stuffing)
-- Use semantic keywords and related terms to support main keywords
-
-CONTENT STRUCTURE:
-1. Start with a compelling title (no "Title:" label) - MUST include primary keyword
-2. Follow with meta description (no "Meta:" label) - compelling and keyword-rich  
-3. Write the article content with ## descriptive headings
-4. Ensure each section has unique, valuable information and meets word targets
-5. Include all specified keywords naturally throughout
-6. End with a natural conclusion - NO SEO analysis or metadata
-
-WORD COUNT ENFORCEMENT:
-- If requesting 1 section with 800 words, write 800 words in that section
-- If requesting 3 sections with 800 words, write ~267 words per section
-- Always meet or exceed the minimum word count specified
-- Each section should be comprehensive and detailed
-
-STRICTLY FORBIDDEN IN CONTENT:
-- SEO analysis comments (reading scores, keyword density, etc.)
-- Technical metadata (target keywords lists, flesch scores)
-- Implementation notes about SEO requirements
-- Bullet points with technical analysis
-- Any mention of "SEO requirements", "keyword density", or similar terms
-
-QUALITY STANDARDS:
-- Focus on reader value and comprehensive coverage
-- Use the specified tone consistently
-- Create content that flows logically from section to section
-- Include specific examples and actionable insights
-- End with practical conclusions or next steps
-- MAINTAIN CONTENT BALANCE: Base 80% of content on provided source material, add 20% original analysis
-- BLEND SOURCE AND INSIGHTS: Weave factual source content with strategic insights seamlessly
-- ADD VALUE: Use your expertise to interpret, analyze, and expand on source information
-- Write ONLY the article content that readers should see"""
+                        "content": system_prompt
                     },
                     {"role": "user", "content": prompt}
                 ],
@@ -203,9 +195,48 @@ QUALITY STANDARDS:
         except Exception as e:
             raise Exception(f"Draft generation failed: {e}")
     
+    def _build_enhanced_system_prompt(self, tone: str, is_crypto_topic: bool = False) -> str:
+        """Build simplified system prompt with tone customization"""
+        
+        # Get the tone profile (only use available tones from the website)
+        available_tones = {
+            "Professional": self.custom_tone_profiles["Professional"],
+            "Conversational": self.custom_tone_profiles["Casual"],  # Map Conversational to Casual
+            "Academic": {"personality": "Academic, scholarly, and research-oriented tone with formal language and detailed analysis."},
+            "Technical": {"personality": "Technical, precise, and detailed tone focusing on specifications and technical accuracy."},
+            "Creative": {"personality": "Creative, engaging, and imaginative tone that captures reader attention with vivid language."}
+        }
+        
+        tone_profile = available_tones.get(tone, available_tones["Professional"])
+        
+        # Apply client's crypto personality requirements for crypto topics
+        if is_crypto_topic:
+            # Apply client's custom crypto personality regardless of selected tone
+            personality = f"""You are a crypto expert writer. {self.crypto_personality_template}
 
-    
- 
+Use crypto slang naturally: HODL, diamond hands, moon, rugpull, ape in, degens, DYOR, "few understand", "not financial advice".
+Be conversational and engaging while maintaining expertise.
+Maintain the overall {tone.lower()} structure while applying crypto personality."""
+        else:
+            # Standard personality for non-crypto content based on selected tone
+            personality = f"""You are an expert content writer. {tone_profile['personality']}"""
+
+        return f"""{personality}
+
+CRITICAL CONTENT PRESERVATION REQUIREMENTS:
+- PRESERVE 80% of original content EXACTLY (facts, quotes, data, statistics, names, prices, percentages)
+- Keep ALL numbers, dates, percentages, dollar amounts UNCHANGED  
+- Preserve original article structure and flow
+- Keep original titles 70% the same (minor modifications only)
+- Keep meta descriptions EXACTLY the same
+- Only add 20% new insights that blend naturally
+- NEVER change factual information or statistics
+- Apply crypto tone while keeping all facts intact
+- Use ## for section headings only
+- No artificial labels like "Title:", "Meta:", etc.
+
+FORBIDDEN: Changing numbers, statistics, quotes, company names, dates, or core facts."""
+
     def _build_draft_prompt(
         self, 
         context: str, 
@@ -223,44 +254,35 @@ QUALITY STANDARDS:
         
         keyword_str = ', '.join(keywords) if keywords else "general topic"
         primary_kw = keywords[0] if keywords else "topic"
+        
+        # Calculate dynamic word count based on source content length
+        source_word_count = len(context.split()) if context else 0
+        if source_word_count > 100:  # If we have substantial source content
+            # Use 80-120% of original length for natural preservation
+            dynamic_word_count = max(600, min(int(source_word_count * 1.0), 1500))
+            print(f"📏 Dynamic word count: {source_word_count} source words → {dynamic_word_count} target words")
+        else:
+            # Fallback to provided word count for keyword-only generation
+            dynamic_word_count = word_count
+            print(f"📏 Using fixed word count: {dynamic_word_count} words (limited source content)")
+        
         # Calculate words per section for balanced content
-        intro_words = 50  # Brief introduction
-        words_per_section = max(80, (word_count - intro_words) // sections)
+        intro_words = 50  # Brief introduction  
+        words_per_section = max(80, (dynamic_word_count - intro_words) // sections)
         
         # Build context analysis
         context_type = "URL content analysis" if "Multi-URL Analysis" in context else "keyword-based content"
         
         # Detect if this is finance/crypto content and add specialized guidance
         domain_expertise = ""
-        finance_crypto_keywords = ['bitcoin', 'crypto', 'cryptocurrency', 'blockchain', 'defi', 'nft', 'trading', 'investment', 'finance', 'financial', 'market', 'price', 'altcoin', 'ethereum', 'binance', 'wallet', 'exchange', 'staking', 'mining', 'portfolio', 'stocks', 'forex']
+        finance_crypto_keywords = ['bitcoin', 'crypto', 'cryptocurrency', 'blockchain', 'defi', 'nft', 'trading', 'investment', 'finance', 'financial', 'market', 'price', 'altcoin', 'ethereum', 'binance', 'wallet', 'exchange', 'staking', 'mining', 'portfolio', 'stocks', 'forex', 'web3', 'metaverse', 'dao', 'yield', 'rugpull', 'hodl', 'memecoin', 'shitcoin']
         
         # Check if any finance/crypto keywords are present
         all_keywords_text = ' '.join(keywords).lower()
         is_finance_crypto_topic = any(keyword.lower() in all_keywords_text for keyword in finance_crypto_keywords)
         
-        if is_finance_crypto_topic:
-            domain_expertise = f"""
-        *** FINANCE/CRYPTO EXPERTISE MODE ACTIVATED ***:
-        This topic relates to finance or cryptocurrency. Apply your specialized knowledge:
-        - Provide accurate market analysis and technical insights
-        - Include relevant financial metrics, price movements, and market trends  
-        - Reference current regulatory developments and institutional adoption when relevant
-        - Explain complex financial/crypto concepts in accessible terms
-        - Offer practical investment guidance and risk management strategies
-        - Connect topics to broader economic trends and market psychology
-        - Use appropriate financial terminology while remaining accessible
-        - Cite relevant market data, trading volumes, and performance metrics when applicable
-        """
-        else:
-            domain_expertise = f"""
-        *** GENERAL EXPERTISE MODE ***:
-        This topic is outside finance/crypto. Write as a subject matter expert in the relevant field:
-        - Focus purely on the topic at hand without forcing financial context
-        - Apply appropriate expertise for the specific subject area
-        - Use terminology and concepts relevant to this particular domain
-        - Provide valuable insights specific to this topic without financial references
-        - Maintain professional quality while staying completely on-topic
-        """
+        # Get tone-specific expertise instructions
+        tone_profile = self.custom_tone_profiles.get(tone, self.custom_tone_profiles["Professional"])
         
         # Create specific focus instructions
         focus_instruction = ""
@@ -331,9 +353,7 @@ QUALITY STANDARDS:
         - Maintain factual tone throughout
         """
         
-        # Create dynamic section heading examples based on keywords
-        heading_examples = self._generate_heading_examples(primary_kw, focus, keywords)
-        
+
         # Add SEO optimization instructions if enabled
         seo_instructions = ""
         if seo_focus:
@@ -353,208 +373,44 @@ QUALITY STANDARDS:
         """
         
         prompt = f"""
-        Create a comprehensive {language} article using {context_type}.
+CRITICAL TASK: Rewrite this content preserving 80% original information exactly while applying crypto expert tone.
 
-        SOURCE CONTEXT: {context}
+SOURCE CONTENT (PRESERVE 80% EXACTLY):
+{context}
 
-        {domain_expertise}
+REQUIREMENTS:
+- Language: {language}
+- Tone: Crypto expert (authoritative, casual, with crypto slang)
+- Keywords: {keyword_str}
+- Sections: {sections}
+- Words: {dynamic_word_count} (adjusted to match source content length)
 
-        ARTICLE SPECIFICATIONS:
-        - Primary Keyword: {primary_kw}
-        - Target Keywords: {keyword_str}
-        - Language: {language}
-        - Tone: {tone}
-        - *** CRITICAL *** Target Length: {word_count} words TOTAL (YOU MUST WRITE EXACTLY THIS AMOUNT)
-        - *** CRITICAL *** Section Count: EXACTLY {sections} section{'s' if sections != 1 else ''} - NO MORE, NO LESS
-        - *** CRITICAL *** Words per section: ~{words_per_section} words each (COUNT YOUR WORDS AS YOU WRITE)
+{focus_instruction}
+{promotion_strategy}
+{seo_instructions}
 
-        *** CRITICAL CONTENT RATIO REQUIREMENT ***:
-        - MAINTAIN 80% SOURCE-BASED CONTENT: Build the majority of your content directly from the provided source context
-        - ADD 20% NEW INSIGHTS: Include your own analysis, interpretations, predictions, or strategic insights
-        - SOURCE CONTENT (80%): Use facts, data, quotes, and information from the provided context
-        - NEW INSIGHTS (20%): Add expert analysis, future implications, strategic recommendations, or original perspectives
-        - BLEND NATURALLY: Don't separate source content and insights - weave them together seamlessly
-        - ATTRIBUTION: When appropriate, reference "recent analysis" or "current trends" for source material
+MANDATORY PRESERVATION RULES:
+✅ PRESERVE EXACTLY: All numbers, prices, percentages, dates, statistics, quotes, company names
+✅ KEEP ORIGINAL: Facts, data points, technical details, market figures
+✅ MAINTAIN: Article structure, main arguments, key insights  
+✅ TITLE: Keep 70% the same (minor modifications only)
+✅ META: Keep EXACTLY the same
+❌ NEVER CHANGE: Statistics, dollar amounts, percentages, dates, factual claims
 
-        {seo_instructions}
+CRYPTO TONE ENHANCEMENT (20% addition):
+- Add crypto slang naturally: HODL, diamond hands, moon, rugpull, ape in, degens, DYOR
+- Use casual, authoritative voice: "few understand this", "not financial advice"
+- Be conversational while maintaining expertise
+- Blend insights naturally without changing original facts
 
-        {focus_instruction}
+OUTPUT FORMAT:
+[Title - keep 70% original]
+[Meta description - keep EXACTLY the same]
 
-        {promotion_strategy}
-
-        CONTENT STRUCTURE REQUIREMENTS:
-        1. Title: Write a compelling title (50-60 characters) that includes "{primary_kw}"
-        2. Meta Description: Create an engaging description (150-155 characters) 
-        3. Article Body: {sections} sections with specific, descriptive headings
-
-        SECTION HEADING REQUIREMENTS:
-        - Create natural, engaging headings that describe the actual content
-        - Headings should be specific to your content, not generic templates
-        - Use action words and specific concepts relevant to {primary_kw}
-        - Make readers curious about what they'll learn in each section
-        - Include keywords naturally when they fit the content flow
-        - Avoid generic headings like "Introduction", "Benefits", "Conclusion"
-
-        HEADING INSPIRATION (create your own variations):
-        {heading_examples}
-
-        *** CRITICAL WORD COUNT ENFORCEMENT ***:
-        - ABSOLUTE REQUIREMENT: Must reach EXACTLY {word_count} words (minimum {int(word_count * 0.95)} words)
-        - SECTION COUNT: Must have EXACTLY {sections} section{'s' if sections != 1 else ''} with ## headings
-        - WORD DISTRIBUTION: Each section MUST be approximately {words_per_section} words - WRITE DETAILED CONTENT
-        - DO NOT STOP WRITING until you reach the required word count
-        - Add examples, explanations, details, and elaboration to reach target length
-        - Use {tone.lower()} tone throughout
-        - Include {primary_kw} in title, first paragraph, and conclusion
-        - Naturally incorporate all target keywords: {keyword_str}
-        - Use clear, engaging language appropriate for {language} speakers
-        - Add specific examples, data, or insights where relevant
-        - Create smooth transitions between sections
-        - End with actionable insights or next steps
-
-        FORMATTING REQUIREMENTS:
-        - Clean text only - no ** bold markers or formatting symbols
-        - Use ## for section headings (no other heading levels)
-        - Write naturally flowing paragraphs
-        - No artificial labels like "Title:", "Meta:", etc.
-        - Format: Title → Meta Description → Article Content with ## headings
-
-        OUTPUT FORMAT:
-        [Compelling Title Here]
-        [Meta description here]
-        
-        [Opening paragraph introducing the topic]
-        
-        {self._generate_section_format_example(sections, words_per_section)}
-        
-        Write the complete article now with EXACTLY {sections} section{'s' if sections != 1 else ''} and {word_count} total words. Each section must be substantial (~{words_per_section} words) to reach the target length. Ensure every section provides unique value and relates to {focus if focus else primary_kw}.
+[Content with ## headings preserving all original data...]
         """
         
         return prompt
-    
-    def _generate_heading_examples(self, primary_keyword: str, focus: str, keywords: List[str]) -> str:
-        """Generate contextual heading examples based on the topic and focus"""
-        
-        examples = []
-        
-        # Generate examples based on the primary keyword type
-        keyword_lower = primary_keyword.lower()
-        
-        if 'bitcoin' in keyword_lower or 'crypto' in keyword_lower:
-            examples = [
-                f"Current {primary_keyword} Market Analysis and Trends",
-                f"Technical Indicators Affecting {primary_keyword} Price",
-                f"Institutional Impact on {primary_keyword} Adoption",
-                f"Risk Management Strategies for {primary_keyword} Investors"
-            ]
-        elif 'price' in keyword_lower:
-            examples = [
-                f"Factors Driving {primary_keyword} Movements",
-                f"Historical {primary_keyword} Patterns and Predictions", 
-                f"Market Sentiment Impact on {primary_keyword}",
-                f"Economic Indicators Affecting {primary_keyword}"
-            ]
-        elif 'investment' in keyword_lower or 'trading' in keyword_lower:
-            examples = [
-                f"Strategic Approaches to {primary_keyword}",
-                f"Risk Assessment in {primary_keyword}",
-                f"Portfolio Diversification with {primary_keyword}",
-                f"Long-term vs Short-term {primary_keyword} Strategies"
-            ]
-        else:
-            # Generic but specific examples
-            examples = [
-                f"Complete Guide to {primary_keyword} Implementation",
-                f"Advanced {primary_keyword} Techniques and Methods",
-                f"Common Challenges in {primary_keyword} Adoption",
-                f"Future Developments in {primary_keyword} Technology"
-            ]
-        
-        # If focus is provided, adjust examples to include it
-        if focus:
-            focused_examples = []
-            for example in examples:
-                # Integrate focus into heading examples
-                if 'analysis' in focus.lower():
-                    focused_examples.append(example.replace('Guide to', 'Analysis of').replace('Impact on', f'{focus} Impact on'))
-                elif 'prediction' in focus.lower():
-                    focused_examples.append(example.replace('Strategies', 'Predictions').replace('Techniques', 'Forecasting'))
-                else:
-                    focused_examples.append(f"{example} - {focus} Perspective")
-            examples = focused_examples
-        
-        return "- " + "\n- ".join(examples[:4])
-    
-    def _generate_section_format_example(self, sections: int, words_per_section: int = 150) -> str:
-        """Generate format example showing exact number of sections requested with word count guidance"""
-        
-        if sections == 1:
-            return f"""## [Single Descriptive Heading]
-[CRITICAL: Write EXACTLY {words_per_section} words here - no less! This single section must be comprehensive and detailed. Write multiple paragraphs covering all aspects with specific examples, detailed explanations, practical insights, and thorough analysis. Keep writing until you reach {words_per_section} words.]"""
-        
-        elif sections == 2:
-            words_each = words_per_section // 2
-            return f"""## [Specific Descriptive Heading 1]
-[MUST write approximately {words_each} words - be detailed and thorough...]
-
-## [Specific Descriptive Heading 2]
-[MUST write approximately {words_each} words - be detailed and thorough...]"""
-        
-        else:
-            # For 3+ sections, distribute words evenly
-            words_each = words_per_section // sections
-            example_parts = []
-            for i in range(1, sections + 1):
-                example_parts.append(f"""## [Specific Descriptive Heading {i}]
-[MUST write approximately {words_each} words - include detailed explanations and examples...]""")
-            return "\n\n".join(example_parts)
-    
-    def _generate_single_pass(
-        self, 
-        context: str, 
-        keywords: List[str], 
-        language: str, 
-        tone: str,
-        focus: str, 
-        sections: int, 
-        word_count: int, 
-        promotion: str,
-        promotional_style: str
-    ) -> Dict[str, Any]:
-        """Fallback single-pass generation method"""
-        
-        prompt = self._build_draft_prompt(
-            context, keywords, language, tone, focus, 
-            sections, word_count, promotion, promotional_style, seo_focus=False
-        )
-        
-        try:
-            # Use the correct parameter for GPT-5
-            completion_params = {
-                "model": self.model,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are an expert content creator with specialized knowledge in finance and cryptocurrency, equally capable of producing high-quality articles across all topics. For finance/crypto topics, apply deep market expertise and industry insights. For other topics, write with appropriate subject matter expertise without forcing financial context. Always match your expertise level and terminology to the specific subject being covered."
-                    },
-                    {"role": "user", "content": prompt}
-                ]
-            }
-            
-            # Use max_completion_tokens for GPT-5, max_tokens for older models
-            if self.model.startswith("gpt-5"):
-                completion_params["max_completion_tokens"] = self.max_tokens
-            else:
-                completion_params["max_tokens"] = self.max_tokens
-            
-            response = self.client.chat.completions.create(**completion_params)
-            
-            content = response.choices[0].message.content.strip()
-            return self._parse_article_content(content, keywords, language, tone, sections)
-            
-        except Exception as e:
-            # Ultimate fallback - return structured placeholder
-            return self._generate_fallback_content(keywords, language, tone)
     
     def _parse_article_content(self, content: str, keywords: List[str], language: str, tone: str, max_sections: int = None) -> Dict[str, Any]:
         """Simple parsing - split on ## markers and extract sections"""
@@ -684,315 +540,6 @@ QUALITY STANDARDS:
             print(f"Content parsing failed: {e}")
             return self._generate_fallback_content(keywords, language, tone)
     
-    def _clean_content_artifacts(self, content: str) -> str:
-        """Clean up formatting artifacts and malformed elements"""
-        
-        cleaned = content
-        
-        # Remove ** formatting
-        cleaned = re.sub(r'\*\*([^*]+)\*\*', r'\1', cleaned)
-        
-        # Fix malformed titles that appear in content
-        cleaned = re.sub(r'Title:\s*\[([^\]]+)\]\([^)]+\)', r'\1', cleaned)
-        
-        # Fix malformed meta descriptions
-        cleaned = re.sub(r'Meta Description:\s*([^\n]+)', r'\1', cleaned)
-        
-        # Remove duplicate title/meta information that appears in content
-        lines = cleaned.split('\n')
-        cleaned_lines = []
-        
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-                
-            # Skip lines that are obviously misplaced metadata
-            if (line.lower().startswith(('title:', 'meta description:', 'slug:')) or
-                (len(line) < 200 and '](/' in line and line.count('[') != line.count(']'))):
-                continue
-            
-            cleaned_lines.append(line)
-        
-        return '\n'.join(cleaned_lines)
-    
-    def _extract_content_elements(self, content: str) -> Dict[str, Any]:
-        """Simple extraction that preserves all content by splitting on ## headings"""
-        
-        # Split content on ## headings to get sections
-        parts = content.split('\n##')
-        
-        elements = {
-            'title_candidates': [],
-            'meta_candidates': [],
-            'headings': [],
-            'paragraphs': [],
-            'sections': []
-        }
-        
-        # Process first part (everything before first ##)
-        if parts:
-            first_part = parts[0].strip()
-            lines = [line.strip() for line in first_part.split('\n') if line.strip()]
-            
-            # First line is likely title
-            if lines:
-                elements['title_candidates'].append(lines[0])
-            
-            # Second line might be meta description
-            if len(lines) > 1 and len(lines[1]) > 50:
-                elements['meta_candidates'].append(lines[1])
-            
-            # Rest goes to paragraphs
-            if len(lines) > 2:
-                intro_content = '\n'.join(lines[2:])
-                if intro_content.strip():
-                    elements['paragraphs'].append(intro_content)
-        
-        # Process sections (everything after ## headings)
-        for i, part in enumerate(parts[1:], 1):
-            if not part.strip():
-                continue
-                
-            # The part starts right after ##, so we need to extract heading and content
-            lines = part.split('\n')
-            if not lines:
-                continue
-                
-            # First line is the heading
-            heading = lines[0].strip()
-            elements['headings'].append(heading)
-            
-            # Rest is the content for this section - preserve ALL of it
-            content_lines = lines[1:]
-            section_content = '\n'.join(content_lines).strip()
-            
-            if section_content:
-                elements['sections'].append({
-                    'heading': heading,
-                    'content': section_content
-                })
-        
-        return elements
-    
-    def _extract_clean_title(self, elements: Dict[str, Any], keywords: List[str]) -> str:
-        """Extract or generate a clean title"""
-        
-        # Look for title candidates that contain keywords
-        primary_keyword = keywords[0] if keywords else ""
-        
-        for candidate in elements['title_candidates']:
-            # Clean the candidate
-            clean_candidate = re.sub(r'[\[\](){}]', '', candidate).strip()
-            
-            # Check if it's a good title (contains keyword or looks title-like)
-            if (primary_keyword.lower() in clean_candidate.lower() or 
-                any(word in clean_candidate.lower() for word in ['guide', 'analysis', 'review', 'complete', 'ultimate', 'best'])):
-                return clean_candidate
-        
-        # If no good title found, use first heading
-        if elements['headings']:
-            return elements['headings'][0]
-        
-        # Last resort - generate from keywords
-        if primary_keyword:
-            return f"Complete Guide to {primary_keyword}"
-        
-        return "Generated Article"
-    
-    def _extract_clean_meta_description(self, elements: Dict[str, Any], title: str) -> str:
-        """Extract or generate clean meta description"""
-        
-        # Look for meta description candidates
-        for candidate in elements['meta_candidates']:
-            if 140 <= len(candidate) <= 160:
-                return candidate
-        
-        # Generate from title and first paragraph
-        if elements['paragraphs']:
-            first_para = elements['paragraphs'][0]
-            if len(first_para) <= 160:
-                return first_para
-            else:
-                # Truncate smartly
-                truncated = first_para[:150]
-                last_space = truncated.rfind(' ')
-                if last_space > 100:
-                    return truncated[:last_space] + "..."
-        
-        # Fallback - generate from title
-        return f"Explore {title.lower()} in this comprehensive guide. Discover key insights, benefits, and practical applications."[:160]
-    
-    def _extract_clean_sections(self, elements: Dict[str, Any], keywords: List[str], max_sections: int = None) -> List[Dict[str, Any]]:
-        """Extract sections with minimal processing to preserve content"""
-        
-        sections = []
-        
-        for section_data in elements['sections']:
-            # Stop if we've reached the maximum number of sections
-            if max_sections and len(sections) >= max_sections:
-                break
-                
-            heading = section_data['heading']
-            content = section_data['content']
-            
-            # Skip empty sections
-            if not content or not content.strip():
-                continue
-            
-            # Just count words, don't filter based on length
-            word_count = len(content.split())
-            
-            sections.append({
-                'heading': heading.strip(),  # Minimal cleaning - just strip whitespace
-                'content': content,  # Preserve all content as-is
-                'keywords': keywords[:2] if len(sections) == 0 else keywords[len(sections):len(sections)+2],
-                'word_count': word_count
-            })
-        
-        return sections
-    
-
-    
-    def _clean_section_heading(self, heading: str, keywords: List[str]) -> str:
-        """Clean up section headings without modifying LLM-generated content"""
-        
-        # Only clean formatting artifacts, don't modify LLM-generated content
-        clean_heading = re.sub(r'[#*\[\]()]', '', heading).strip()
-        
-        # Remove any leading/trailing quotes or special characters
-        clean_heading = clean_heading.strip('"\'`')
-        
-        # Only reject headings that are clearly malformed (very short or obviously corrupted)
-        if len(clean_heading) < 3:
-            primary_keyword = keywords[0] if keywords else "Content"
-            return f"{primary_keyword} Overview"
-        
-        # Return the LLM-generated heading as-is (this preserves the natural language)
-        return clean_heading
-    
-    def _create_sections_from_content(self, content: str, keywords: List[str], max_sections: int = None) -> List[Dict[str, Any]]:
-        """Create sections from unstructured content by parsing LLM-generated structure"""
-        
-        # This method should only be called if normal parsing fails
-        # Try to extract natural sections from the content
-        
-        # Look for potential headings in the content (lines that could be headings)
-        lines = content.split('\n')
-        potential_sections = []
-        current_content = []
-        current_heading = None
-        
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            
-            # Check if this line looks like a heading
-            is_heading = self._is_potential_heading(line, keywords)
-            
-            if is_heading and current_content:
-                # Save previous section (if we haven't reached the limit)
-                if current_heading and (not max_sections or len(potential_sections) < max_sections):
-                    section_text = '\n\n'.join(current_content)
-                    if len(section_text.split()) >= 30:  # Only include substantial sections
-                        potential_sections.append({
-                            'heading': current_heading,
-                            'content': section_text,
-                            'keywords': keywords[:2] if len(potential_sections) == 0 else keywords[len(potential_sections):len(potential_sections)+2],
-                            'word_count': len(section_text.split())
-                        })
-                
-                # Start new section
-                current_heading = line
-                current_content = []
-            
-            elif is_heading and not current_content:
-                # This is the first heading
-                current_heading = line
-                current_content = []
-            
-            else:
-                # This is regular content
-                if current_heading:  # Only add content if we have a heading
-                    current_content.append(line)
-        
-        # Add the final section (if we haven't reached the limit)
-        if current_heading and current_content and (not max_sections or len(potential_sections) < max_sections):
-            section_text = '\n\n'.join(current_content)
-            if len(section_text.split()) >= 30:
-                potential_sections.append({
-                    'heading': current_heading,
-                    'content': section_text,
-                    'keywords': keywords[:2] if len(potential_sections) == 0 else keywords[len(potential_sections):len(potential_sections)+2],
-                    'word_count': len(section_text.split())
-                })
-        
-        # If no natural sections found, create one large section from all content
-        if not potential_sections:
-            primary_keyword = keywords[0] if keywords else "Content"
-            all_content = '\n\n'.join([line.strip() for line in lines if line.strip()])
-            
-            if len(all_content.split()) >= 50:
-                potential_sections.append({
-                    'heading': f"Comprehensive {primary_keyword} Analysis",
-                    'content': all_content,
-                    'keywords': keywords[:3],
-                    'word_count': len(all_content.split())
-                })
-        
-        return potential_sections
-    
-    def _is_potential_heading(self, line: str, keywords: List[str]) -> bool:
-        """Determine if a line could be a section heading"""
-        
-        # Skip if line is too long to be a heading
-        if len(line) > 100 or len(line) < 10:
-            return False
-        
-        # Skip if line ends with period (likely a sentence)
-        if line.endswith('.'):
-            return False
-        
-        # Skip if line has too many common words
-        common_words = ['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by']
-        line_words = line.lower().split()
-        common_word_count = sum(1 for word in line_words if word in common_words)
-        
-        if common_word_count > len(line_words) * 0.4:  # More than 40% common words
-            return False
-        
-        # Positive indicators for headings
-        heading_indicators = 0
-        
-        # Contains keywords
-        for keyword in keywords:
-            if keyword.lower() in line.lower():
-                heading_indicators += 2
-                break
-        
-        # Title case or proper capitalization
-        if line.istitle() or (line[0].isupper() and not line.isupper()):
-            heading_indicators += 1
-        
-        # Contains action words or question words
-        action_words = ['how', 'what', 'why', 'when', 'where', 'understanding', 'analyzing', 'exploring', 'discovering']
-        if any(word in line.lower() for word in action_words):
-            heading_indicators += 1
-        
-        # Contains topic-specific terms
-        topic_terms = ['analysis', 'guide', 'overview', 'introduction', 'conclusion', 'summary', 'strategies', 'benefits', 'challenges']
-        if any(term in line.lower() for term in topic_terms):
-            heading_indicators += 1
-        
-        # Reasonable word count for a heading
-        word_count = len(line_words)
-        if 3 <= word_count <= 12:
-            heading_indicators += 1
-        
-        # Return true if we have enough indicators
-        return heading_indicators >= 2
-    
     def _generate_slug(self, title: str) -> str:
         """Generate URL-friendly slug from title"""
         
@@ -1018,8 +565,6 @@ QUALITY STANDARDS:
         ]
         
         return cta_options[hash(title) % len(cta_options)]
-    
-
     
     def generate_link_integration(self, prompt: str) -> str:
         """Generate updated article content with integrated links using AI"""

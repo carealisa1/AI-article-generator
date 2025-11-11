@@ -903,20 +903,24 @@ def main():
                 combined_data = content_tools.combine_extracted_contents(extracted_contents)
                 
                 if combined_data['successful_extractions'] > 0:
-                    # Create comprehensive context for LLM
-                    context = f"""Multi-URL Analysis Results:
-Title: {combined_data['combined_title']}
-Sources Analyzed: {combined_data['source_count']}/{combined_data['total_urls_attempted']}
-Success Rate: {combined_data['success_rate']:.1f}%
-Extraction Methods: {', '.join(combined_data['extraction_methods'])}
+                    # Create clean context for AI (no technical metadata)
+                    context = f"""Source Content Analysis:
 
-Combined Content:
 {combined_data['combined_content']}
 
-Key Topics Identified: {', '.join(combined_data['combined_keywords'][:10])}
-
-Source Summaries:
-{chr(10).join(combined_data['source_summaries'])}"""
+Additional Context:
+Key topics from source analysis: {', '.join(combined_data['combined_keywords'][:10])}"""
+                    
+                    # DEBUG: Print what we're sending to AI
+                    st.write("🔍 **DEBUG: Content being sent to AI:**")
+                    with st.expander("View AI Input Context", expanded=False):
+                        st.text(f"Content Length: {len(context)} characters")
+                        st.text_area("Full Context:", context, height=300)
+                        st.text(f"Keywords: {config['keywords']}")
+                        st.text(f"Language: {config['language']}")
+                        st.text(f"Tone: {config['tone']}")
+                        st.text(f"Focus: {config['focus']}")
+                        st.text(f"Word Count: {config['word_count']}")
                     
                     # Store extraction summary for later display but don't show during generation
                     st.session_state.extraction_summary = {
@@ -940,6 +944,23 @@ Source Summaries:
             
             # Step 2: Generate Article Structure
             update_progress("Generating article content with GPT-4...", 0.35)
+            
+            # DEBUG: Show final parameters going to AI
+            st.write("🤖 **DEBUG: Final AI Generation Parameters:**")
+            with st.expander("View AI Generation Config", expanded=False):
+                st.json({
+                    "context_length": len(context),
+                    "keywords": config["keywords"],
+                    "language": config["language"],
+                    "tone": config["tone"],
+                    "focus": config["focus"],
+                    "sections": config["sections"],
+                    "word_count": config["word_count"],
+                    "promotion": config["promotion"],
+                    "promotional_style": config["promotional_style"],
+                    "seo_focus": config["seo_focus"]
+                })
+            
             article_data = llm_engine.generate_article(
                 context=context,
                 keywords=config["keywords"],
