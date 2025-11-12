@@ -19,7 +19,6 @@ DEFAULT_CONFIG = {
     "default_language": "English",
     "default_tone": "Professional",
     "default_sections": 5,
-    "default_word_count": 600,
     "image_size": "1024x1024",
     "max_images": 5
 }

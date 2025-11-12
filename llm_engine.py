@@ -90,10 +90,11 @@ class LLMEngine:
         tone: str = "Professional", 
         focus: str = "", 
         sections: int = 5,
-        word_count: int = 600,
         promotion: str = "",
         promotional_style: str = "No Promotion",
-        seo_focus: bool = True
+        seo_focus: bool = True,
+        external_links: str = "",
+        promotional_context: str = ""
     ) -> Dict[str, Any]:
         """
         Generate a complete article using multi-pass refinement approach
@@ -119,7 +120,7 @@ class LLMEngine:
             # Generate SEO-optimized content in single pass
             final_content = self._generate_draft(
                 context, keyword_list, language, tone, focus, 
-                sections, word_count, promotion, promotional_style, seo_focus
+                sections, promotion, promotional_style, seo_focus, external_links, promotional_context
             )
             
             # Parse and structure the final content
@@ -141,17 +142,18 @@ class LLMEngine:
         tone: str,
         focus: str, 
         sections: int, 
-        word_count: int, 
         promotion: str,
         promotional_style: str,
-        seo_focus: bool = True
+        seo_focus: bool = True,
+        external_links: str = "",
+        promotional_context: str = ""
     ) -> str:
         """Generate the initial draft of the article"""
         
         # Construct comprehensive prompt
         prompt = self._build_draft_prompt(
             context, keywords, language, tone, focus, 
-            sections, word_count, promotion, promotional_style, seo_focus
+            sections, promotion, promotional_style, seo_focus, external_links, promotional_context
         )
         
         # Always apply crypto expert tone as per client requirements
@@ -223,19 +225,20 @@ Maintain the overall {tone.lower()} structure while applying crypto personality.
 
         return f"""{personality}
 
-CRITICAL CONTENT PRESERVATION REQUIREMENTS:
-- PRESERVE 80% of original content EXACTLY (facts, quotes, data, statistics, names, prices, percentages)
-- Keep ALL numbers, dates, percentages, dollar amounts UNCHANGED  
-- Preserve original article structure and flow
-- Keep original titles 70% the same (minor modifications only)
-- Keep meta descriptions EXACTLY the same
-- Only add 20% new insights that blend naturally
-- NEVER change factual information or statistics
-- Apply crypto tone while keeping all facts intact
+CRITICAL ORIGINAL WRITING REQUIREMENTS:
+- Write original content using source material as factual foundation
+- Maintain ALL factual accuracy (numbers, dates, prices, statistics, company names)
+- Keep ALL numerical data and quotes UNCHANGED from source
+- Keep meta description 100% EXACTLY the same as original - no changes whatsoever
+- Create engaging, natural headings (avoid "topic", "general topic", placeholder language)
+- Write as if creating original analysis, not transforming existing content
+- Use specific, confident language about the subject matter
+- Apply crypto tone while maintaining complete factual accuracy
 - Use ## for section headings only
 - No artificial labels like "Title:", "Meta:", etc.
+- STRICT RULE: Follow the exact number of sections requested - count carefully before finishing
 
-FORBIDDEN: Changing numbers, statistics, quotes, company names, dates, or core facts."""
+FORBIDDEN: Using placeholder language, copying sentence structures, changing factual data, exceeding the requested section count."""
 
     def _build_draft_prompt(
         self, 
@@ -245,30 +248,16 @@ FORBIDDEN: Changing numbers, statistics, quotes, company names, dates, or core f
         tone: str,
         focus: str, 
         sections: int, 
-        word_count: int, 
         promotion: str,
         promotional_style: str,
-        seo_focus: bool = True
+        seo_focus: bool = True,
+        external_links: str = "",
+        promotional_context: str = ""
     ) -> str:
         """Build comprehensive prompt for draft generation"""
         
         keyword_str = ', '.join(keywords) if keywords else "general topic"
         primary_kw = keywords[0] if keywords else "topic"
-        
-        # Calculate dynamic word count based on source content length
-        source_word_count = len(context.split()) if context else 0
-        if source_word_count > 100:  # If we have substantial source content
-            # Use 80-120% of original length for natural preservation
-            dynamic_word_count = max(600, min(int(source_word_count * 1.0), 1500))
-            print(f"📏 Dynamic word count: {source_word_count} source words → {dynamic_word_count} target words")
-        else:
-            # Fallback to provided word count for keyword-only generation
-            dynamic_word_count = word_count
-            print(f"📏 Using fixed word count: {dynamic_word_count} words (limited source content)")
-        
-        # Calculate words per section for balanced content
-        intro_words = 50  # Brief introduction  
-        words_per_section = max(80, (dynamic_word_count - intro_words) // sections)
         
         # Build context analysis
         context_type = "URL content analysis" if "Multi-URL Analysis" in context else "keyword-based content"
@@ -292,6 +281,37 @@ FORBIDDEN: Changing numbers, statistics, quotes, company names, dates, or core f
         - This article MUST center around: {focus}
         - Every section should relate back to this focus angle
         - Use {focus} as the primary lens for analyzing {primary_kw}
+        """
+        
+        # Parse external links for integration
+        links_instruction = ""
+        if external_links and external_links.strip():
+            links = []
+            for line in external_links.strip().split('\n'):
+                if line.strip():
+                    if ' - ' in line:
+                        url, description = line.split(' - ', 1)
+                        links.append({"url": url.strip(), "description": description.strip()})
+                    else:
+                        links.append({"url": line.strip(), "description": ""})
+            
+            if links:
+                links_instruction = f"""
+        *** EXTERNAL LINKS INTEGRATION REQUIREMENTS ***:
+        
+        LINKS TO INTEGRATE (USE EACH EXACTLY ONCE):
+        {chr(10).join([f"- {link['url']} ({link['description']})" if link['description'] else f"- {link['url']}" for link in links])}
+        
+        INTEGRATION RULES:
+        - MANDATORY: USE ALL LINKS - you MUST integrate every single link provided
+        - USE EACH LINK EXACTLY ONCE - never duplicate any URL
+        - Place links strategically within relevant paragraphs 
+        - Use HTML format: <a href="URL" target="_blank">descriptive anchor text</a>
+        - ALWAYS include target="_blank" to open links in new tabs
+        - Choose natural anchor text that fits the sentence context
+        - FORCE integration - find appropriate places for ALL links
+        - You have {len(links)} links and must use all {len(links)} of them
+        - Creative placement is required - make them fit naturally but USE ALL
         """
         
         # Create promotional integration strategy using client-specific templates
@@ -353,61 +373,75 @@ FORBIDDEN: Changing numbers, statistics, quotes, company names, dates, or core f
         - Maintain factual tone throughout
         """
         
+        # Add promotional context if available
+        promotional_info = ""
+        if promotional_context:
+            promotional_info = f"""
+        
+*** PROMOTIONAL CONTEXT INFORMATION ***:
+Use the following detailed information about {promotion} to create accurate, informative content:
 
-        # Add SEO optimization instructions if enabled
-        seo_instructions = ""
-        if seo_focus:
-            seo_instructions = f"""
-        *** CRITICAL SEO OPTIMIZATION REQUIREMENTS ***:
-        - PRIMARY KEYWORD "{primary_kw}" MUST appear in:
-          * Title (naturally integrated)
-          * First paragraph (within first 100 words)
-          * At least 2 section headings (when it fits naturally)
-          * Conclusion paragraph
-        - ALL TARGET KEYWORDS must be used organically: {keyword_str}
-        - Section headings should be descriptive AND keyword-rich when natural
-        - Use semantic keywords and related terms throughout
-        - Maintain keyword density of 1-2% for primary keyword (natural, no stuffing)
-        - Create compelling meta description (150-155 chars) with primary keyword
-        - Ensure content answers search intent for "{primary_kw}"
-        """
+{promotional_context}
+
+This information provides comprehensive background about {promotion} including tokenomics, features, roadmap, and market positioning. Use this to ensure accuracy and relevance in your promotional sections.
+"""
+
         
         prompt = f"""
-CRITICAL TASK: Rewrite this content preserving 80% original information exactly while applying crypto expert tone.
+TASK: Write an original, comprehensive article using the provided source material as factual foundation and inspiration.
 
-SOURCE CONTENT (PRESERVE 80% EXACTLY):
+SOURCE MATERIAL FOR REFERENCE:
 {context}
 
 REQUIREMENTS:
-- Language: {language}
-- Tone: Crypto expert (authoritative, casual, with crypto slang)
-- Keywords: {keyword_str}
-- Sections: {sections}
-- Words: {dynamic_word_count} (adjusted to match source content length)
+- Target Language: {language}
+- Apply crypto expert tone (casual, authoritative, crypto slang)
+- Keywords to include naturally: {keyword_str}
+- Write as if you're creating original content, not transforming existing text
+- MANDATORY: Create exactly {sections} main content sections (## headings) - no more, no less
+
+{links_instruction}
+
+WRITING APPROACH:
+✅ USE SOURCE FACTS & DATA:
+- Extract all factual information (numbers, prices, dates, statistics, company names)
+- Use technical details and market data as foundation
+- Reference key developments and trends mentioned
+- Maintain accuracy of all numerical data and quotes
+- Keep meta description EXACTLY as it appears in source - word for word
+
+✅ CREATE ORIGINAL NARRATIVE:
+- Write in your own words using crypto expert voice
+- Natural crypto slang: HODL, diamond hands, moon, ape in, degens, DYOR  
+- Casual expert commentary: "few understand this", "not financial advice"
+- Conversational tone with authoritative insights
+- Make it feel like original analysis, not copied content
+
+✅ AVOID COPY-LIKE LANGUAGE:
+- Never use placeholder words like "topic", "general topic", "the article"
+- Write specific, engaging headings (not "Analysis - topic")
+- Make content flow naturally as if written from scratch
+- Use direct, confident language about the subject matter
 
 {focus_instruction}
 {promotion_strategy}
-{seo_instructions}
+{promotional_info}
 
-MANDATORY PRESERVATION RULES:
-✅ PRESERVE EXACTLY: All numbers, prices, percentages, dates, statistics, quotes, company names
-✅ KEEP ORIGINAL: Facts, data points, technical details, market figures
-✅ MAINTAIN: Article structure, main arguments, key insights  
-✅ TITLE: Keep 70% the same (minor modifications only)
-✅ META: Keep EXACTLY the same
-❌ NEVER CHANGE: Statistics, dollar amounts, percentages, dates, factual claims
+OUTPUT FORMAT (clean, engaging):
+[Compelling Original Title]
+[Engaging Meta Description]
 
-CRYPTO TONE ENHANCEMENT (20% addition):
-- Add crypto slang naturally: HODL, diamond hands, moon, rugpull, ape in, degens, DYOR
-- Use casual, authoritative voice: "few understand this", "not financial advice"
-- Be conversational while maintaining expertise
-- Blend insights naturally without changing original facts
+CRITICAL: Write EXACTLY {sections} main sections with ## headings:
 
-OUTPUT FORMAT:
-[Title - keep 70% original]
-[Meta description - keep EXACTLY the same]
+## [Section 1: Specific, Natural Heading]
+[Original content with crypto tone, using source facts...]
 
-[Content with ## headings preserving all original data...]
+## [Section 2: Another Engaging Heading]
+[Original analysis and insights with source data...]
+
+[Continue for exactly {sections} sections total - count them carefully!]
+
+STOP after {sections} sections. Do not add extra sections beyond this limit.
         """
         
         return prompt
@@ -424,18 +458,19 @@ OUTPUT FORMAT:
             title = lines[0].strip() if lines else "Generated Article"
             
             # Extract meta description (second non-empty line that looks like meta description)
+            # PRESERVE EXACTLY as it appears in source - no truncation or modification
             meta_description = ""
             for i, line in enumerate(lines[1:], 1):
                 line = line.strip()
                 if (line and 
                     len(line) > 80 and 
-                    len(line) < 300 and 
+                    len(line) < 500 and  # Increased limit to preserve full original
                     not line.startswith('#') and
                     not line.lower().startswith(('title:', 'meta:', 'description:'))):
-                    meta_description = line[:160]
+                    meta_description = line  # Keep exactly as is - no [:160] truncation
                     break
             
-            # Fallback meta description
+            # Fallback meta description only if no original found
             if not meta_description:
                 if keywords:
                     meta_description = f"Comprehensive analysis of {keywords[0]} and its impact. Explore key insights, trends, and implications in this detailed guide."
@@ -488,6 +523,11 @@ OUTPUT FORMAT:
                         'keywords': keywords[:3],
                         'word_count': len(section_content.split())
                     })
+            
+            # Enforce section count limit - trim excess sections if AI generated too many
+            if max_sections and len(sections) > max_sections:
+                print(f"⚠️ AI generated {len(sections)} sections, trimming to requested {max_sections}")
+                sections = sections[:max_sections]
             
             # If no sections found, create one section from all content after title/meta
             if not sections:

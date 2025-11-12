@@ -13,6 +13,7 @@ from content_tools import ContentTools
 from seo_tools import SEOTools
 from exporter import Exporter
 from auth_config import create_authenticator
+from promotional_content import get_promotional_context
 
 # Load environment variables
 load_dotenv()
@@ -171,9 +172,6 @@ def create_sidebar():
             value=4,
             help="Controls how many H2 sections the article should contain (1-6)"
         )
-        
-        # Hardcoded word count
-        word_count = 800
     
     # Enhancement Options Section
     with st.sidebar.expander("⚡ Enhancement Options"):
@@ -183,21 +181,11 @@ def create_sidebar():
         
         st.markdown("**Promotional Content:**")
         
+        # Import promotional content options
+        from promotional_content import get_available_promotions
+        
         # Promotional Content Dropdown
-        promotional_options = [
-            "None",
-            "Doge coins", 
-            "Shiba", 
-            "Pepe", 
-            "Best Wallet", 
-            "Bitcoin Hyper", 
-            "BlockchainFX", 
-            "MAXI DOGE", 
-            "Pepenode", 
-            "Snorter", 
-            "Subbd", 
-            "Spacepay"
-        ]
+        promotional_options = get_available_promotions()
         
         selected_promotion = st.selectbox(
             "Select Promotional Content:",
@@ -241,11 +229,11 @@ def create_sidebar():
             help="Tone and style for AI-generated images"
         )
         
-        internal_links = st.text_area(
-            "Internal Links:",
-            placeholder="Link Text: /url\nAnother Link: /page",
+        external_links = st.text_area(
+            "External Links (Auto-Integration):",
+            placeholder="https://example.com - Description\nhttps://another-site.com/page - What this link is about",
             height=60,
-            help="Format: Link Text: /url-path"
+            help="External links will be automatically integrated into the article during generation. Format: URL - Description (optional)"
         )
     
     # Configuration Summary
@@ -256,14 +244,16 @@ def create_sidebar():
         # Calculate dynamic metrics
         url_count = len([url.strip() for url in (url_input or '').split('\n') if url.strip()]) if url_input else 0
         keyword_count = len([k.strip() for k in keywords.split('\n') if k.strip()]) if keywords else 0
+        external_link_count = len([link.strip() for link in external_links.split('\n') if link.strip()]) if external_links else 0
         
         st.markdown(f"""
         <div style="background-color: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
             <p style="color: #1e3a8a; margin: 0; line-height: 1.6;">
                 <strong>Language:</strong> {language}<br>
                 <strong>Tone:</strong> {tone} | <strong>Image:</strong> {image_provider.split()[0]} - {image_tone}<br>
-                <strong>Structure:</strong> {sections} sections, ~800 words<br>
+                <strong>Structure:</strong> {sections} sections<br>
                 <strong>Sources:</strong> {url_count} URLs, {keyword_count} keywords<br>
+                <strong>Links:</strong> {external_link_count} external links for auto-integration<br>
                 <strong>Promotion:</strong> {promotional_style} - {selected_promotion if selected_promotion != 'None' else 'Disabled'}
             </p>
         </div>
@@ -289,8 +279,7 @@ def create_sidebar():
         "custom_promotion": custom_promotion,
         "image_provider": image_provider,
         "image_tone": image_tone,
-        "internal_links": internal_links,
-        "word_count": int(word_count),
+        "external_links": external_links,
         "include_images": include_images,
         "seo_focus": seo_focus
     }
@@ -478,11 +467,12 @@ INTEGRATION STYLE: {link_style}
 INTEGRATION DENSITY: {link_density}
 
 *** CRITICAL LINK USAGE REQUIREMENTS ***:
+- MANDATORY: USE ALL LINKS - you MUST integrate every single link provided
 - USE EACH LINK EXACTLY ONCE - never duplicate or reuse the same URL
-- You have {len(links)} link(s) to integrate - aim to use ALL of them if they fit naturally
+- You have {len(links)} link(s) to integrate - you MUST use ALL {len(links)} of them
 - Each URL should appear only ONE TIME in the final article
-- If a link doesn't fit naturally anywhere, it's better to skip it than force it
-- Focus on quality placement over quantity
+- FORCE integration - find appropriate places for ALL links even if challenging
+- Creative placement is required - make them fit naturally but USE ALL
 
 INSTRUCTIONS:
 - {style_instructions[link_style]}
@@ -911,17 +901,6 @@ def main():
 Additional Context:
 Key topics from source analysis: {', '.join(combined_data['combined_keywords'][:10])}"""
                     
-                    # DEBUG: Print what we're sending to AI
-                    st.write("🔍 **DEBUG: Content being sent to AI:**")
-                    with st.expander("View AI Input Context", expanded=False):
-                        st.text(f"Content Length: {len(context)} characters")
-                        st.text_area("Full Context:", context, height=300)
-                        st.text(f"Keywords: {config['keywords']}")
-                        st.text(f"Language: {config['language']}")
-                        st.text(f"Tone: {config['tone']}")
-                        st.text(f"Focus: {config['focus']}")
-                        st.text(f"Word Count: {config['word_count']}")
-                    
                     # Store extraction summary for later display but don't show during generation
                     st.session_state.extraction_summary = {
                         'urls_attempted': combined_data['total_urls_attempted'],
@@ -942,24 +921,13 @@ Key topics from source analysis: {', '.join(combined_data['combined_keywords'][:
             if config.get('additional_content'):
                 context += f"\n\nAdditional Inspiration Content: {config['additional_content']}"
             
+            # Include promotional context if needed
+            promotional_context = ""
+            if config.get('promotion') and config['promotion'] != "None":
+                promotional_context = get_promotional_context(config['promotion'])
+            
             # Step 2: Generate Article Structure
             update_progress("Generating article content with GPT-4...", 0.35)
-            
-            # DEBUG: Show final parameters going to AI
-            st.write("🤖 **DEBUG: Final AI Generation Parameters:**")
-            with st.expander("View AI Generation Config", expanded=False):
-                st.json({
-                    "context_length": len(context),
-                    "keywords": config["keywords"],
-                    "language": config["language"],
-                    "tone": config["tone"],
-                    "focus": config["focus"],
-                    "sections": config["sections"],
-                    "word_count": config["word_count"],
-                    "promotion": config["promotion"],
-                    "promotional_style": config["promotional_style"],
-                    "seo_focus": config["seo_focus"]
-                })
             
             article_data = llm_engine.generate_article(
                 context=context,
@@ -968,10 +936,11 @@ Key topics from source analysis: {', '.join(combined_data['combined_keywords'][:
                 tone=config["tone"],
                 focus=config["focus"],
                 sections=config["sections"],
-                word_count=config["word_count"],
                 promotion=config["promotion"],
                 promotional_style=config["promotional_style"],
-                seo_focus=config["seo_focus"]
+                seo_focus=config["seo_focus"],
+                external_links=config["external_links"],
+                promotional_context=promotional_context
             )
             
             # Step 3: SEO Optimization
@@ -999,7 +968,7 @@ Key topics from source analysis: {', '.join(combined_data['combined_keywords'][:
             update_progress("Enhancing and finalizing content...", 0.90)
             enhanced_content = content_tools.enhance_content(
                 article_data,
-                internal_links=config["internal_links"],
+                internal_links=config["external_links"],
                 seo_data=seo_data
             )
             
@@ -1476,7 +1445,20 @@ def display_generated_content():
                 """, height=70)
             
             with col3:
-                # Custom copy HTML button with base64 encoding for reliable copying
+                # Custom copy button for article sections text (no title/meta)
+                # Extract only article content sections without title and meta description
+                import re
+                article_sections_only = enhanced_content.get('content', '')
+                
+                # Remove HTML tags to get plain text
+                clean_text = re.sub(r'<[^>]+>', '', article_sections_only)
+                # Clean up extra whitespace
+                clean_text = re.sub(r'\n\s*\n', '\n\n', clean_text.strip())
+                
+                # Encode the clean text content
+                import base64
+                text_b64 = base64.b64encode(clean_text.encode('utf-8')).decode('utf-8')
+                
                 components.html(f"""
                 <div style="width: 100%; padding: 0; margin: 0; display: flex; flex-direction: column; align-items: stretch;">
                     <button id="copyBtn" onclick="copyToClipboard()" style="
@@ -1500,13 +1482,13 @@ def display_generated_content():
                         line-height: 1;
                         vertical-align: top;
                     ">
-                        <span id="btnIcon">📋</span> <span id="btnText">Copy HTML</span>
+                        <span id="btnIcon">📋</span> <span id="btnText">Copy Text</span>
                     </button>
                     <div id="status" style="margin-top: 8px; text-align: center; font-size: 12px; opacity: 0; transition: opacity 0.3s;"></div>
                 </div>
                 
                 <script>
-                const copyHtmlContent = atob('{html_b64}');
+                const copyTextContent = atob('{text_b64}');
                 
                 async function copyToClipboard() {{
                     const btn = document.getElementById('copyBtn');
@@ -1525,11 +1507,11 @@ def display_generated_content():
                         
                         // Copy to clipboard
                         if (navigator.clipboard && navigator.clipboard.writeText) {{
-                            await navigator.clipboard.writeText(copyHtmlContent);
+                            await navigator.clipboard.writeText(copyTextContent);
                         }} else {{
                             // Fallback for older browsers
                             const textarea = document.createElement('textarea');
-                            textarea.value = copyHtmlContent;
+                            textarea.value = copyTextContent;
                             textarea.style.position = 'fixed';
                             textarea.style.opacity = '0';
                             document.body.appendChild(textarea);
@@ -1542,14 +1524,14 @@ def display_generated_content():
                         btn.style.background = 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)';
                         icon.innerHTML = '✅';
                         text.innerHTML = 'Copied!';
-                        status.innerHTML = 'HTML copied (' + Math.round(copyHtmlContent.length/1024) + 'KB)';
+                        status.innerHTML = 'Text copied (' + Math.round(copyTextContent.length/1024) + 'KB)';
                         status.style.color = '#4caf50';
                         
                         // Reset after 3 seconds
                         setTimeout(() => {{
                             btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                             icon.innerHTML = '📋';
-                            text.innerHTML = 'Copy HTML';
+                            text.innerHTML = 'Copy Text';
                             status.style.opacity = '0';
                         }}, 3000);
                         
@@ -1567,7 +1549,7 @@ def display_generated_content():
                         setTimeout(() => {{
                             btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                             icon.innerHTML = '📋';
-                            text.innerHTML = 'Copy HTML';
+                            text.innerHTML = 'Copy Text';
                             status.style.opacity = '0';
                         }}, 4000);
                     }}
@@ -1657,6 +1639,35 @@ def display_generated_content():
                             """, unsafe_allow_html=True)
                         else:
                             st.image(image_data['url'], width='stretch')
+                            
+                            # Add download button for full-quality image
+                            download_col1, download_col2, download_col3 = st.columns([1, 2, 1])
+                            with download_col2:
+                                # Get image URL and create filename
+                                image_url = image_data.get('url', '')
+                                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                filename = f"ai_image_{section_idx}_{timestamp}.png"
+                                
+                                # Fetch image data for download
+                                try:
+                                    import requests
+                                    response = requests.get(image_url)
+                                    if response.status_code == 200:
+                                        image_bytes = response.content
+                                        
+                                        # Streamlit download button
+                                        st.download_button(
+                                            label="Download Image",
+                                            data=image_bytes,
+                                            file_name=filename,
+                                            mime="image/png",
+                                            use_container_width=True,
+                                            key=f"download_img_{section_idx}_{i}"
+                                        )
+                                    else:
+                                        st.error("❌ Could not fetch image for download")
+                                except Exception as e:
+                                    st.error(f"❌ Download error: {str(e)}")
                     
                     # Second Row - Controls in Two Columns
                     prompt_col, settings_col = st.columns(2)
@@ -1769,12 +1780,16 @@ def display_generated_content():
                                 regenerate_image(section_idx, i, new_prompt, selected_model, regenerate_tone)
                     
 
-    # Smart Link Integration Section
+    # Link Integration Status
+    current_content = enhanced_content.get('content', '')
+    link_count = current_content.count('<a href=')
+    
+    # Smart Link Integration Section (Additional Links)
     st.markdown("---")
     
-    with st.expander("🔗 Smart Link Integration", expanded=True):
+    with st.expander("🔗 Smart Link Integration (Add More Links)", expanded=False):
         st.markdown("""
-        **AI-Powered Link Placement** - Provide links and let GPT intelligently insert them at the most appropriate positions in your article.
+        **Add Additional Links** - Integrate more external links into your already generated article using AI.
         """)
         
         # Link input area
@@ -1782,7 +1797,7 @@ def display_generated_content():
         
         with col1:
             link_input = st.text_area(
-                "Enter Links (one per line):",
+                "Enter Additional Links (one per line):",
                 placeholder="https://example.com - Brief description of the link\nhttps://another-site.com/page - What this link is about\nhttps://internal-link.com/article - Related article",
                 height=155,
                 help="Format: URL - Description (optional). GPT will use descriptions to place links contextually.",
@@ -1797,12 +1812,10 @@ def display_generated_content():
                     for error in errors:
                         st.error(f"• {error}")
                 else:
-                    link_count = len([link.strip() for link in link_input.split('\n') if link.strip()])
-                    st.success(f"✓ {link_count} valid links ready for integration")
+                    additional_link_count = len([link.strip() for link in link_input.split('\n') if link.strip()])
+                    st.success(f"✓ {additional_link_count} valid links ready for integration")
         
         with col2:
-
-            
             link_style = st.selectbox(
                 "Link Style:",
                 ["Natural Integration", "Contextual Placement", "Strategic SEO"],
@@ -1826,12 +1839,12 @@ def display_generated_content():
                 urls_valid = is_valid
             
             if st.button(
-                "🚀 Integrate Links with AI",
+                "🚀 Add Links to Article",
                 type="primary",
                 disabled=not link_input or not st.session_state.article_data or not urls_valid,
-                help="Use GPT to intelligently place links in the article" if urls_valid else "Fix invalid URLs before proceeding",
+                help="Use GPT to intelligently place additional links in the article" if urls_valid else "Fix invalid URLs before proceeding",
                 use_container_width=True,
-                key="integrate_links_btn"
+                key="integrate_additional_links_btn"
             ):
                 if not st.session_state.article_data:
                     st.error("❌ Please generate an article first before integrating links.")
