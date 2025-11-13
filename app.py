@@ -229,12 +229,92 @@ def create_sidebar():
             help="Tone and style for AI-generated images"
         )
         
-        external_links = st.text_area(
-            "External Links (Auto-Integration):",
-            placeholder="https://example.com - Description\nhttps://another-site.com/page - What this link is about",
-            height=60,
-            help="External links will be automatically integrated into the article during generation. Format: URL - Description (optional)"
-        )
+        # External Links for Auto-Integration with Dynamic UI
+        st.markdown("**External Links (Auto-Integration):**")
+        
+        # Initialize session state for dynamic links
+        if 'external_links_data' not in st.session_state:
+            st.session_state.external_links_data = []
+        
+        # Display existing links in a compact format
+        if st.session_state.external_links_data:
+            with st.container():
+                st.markdown("**Added Links:**")
+                links_to_remove = []
+                for i, link_data in enumerate(st.session_state.external_links_data):
+                    col1, col2 = st.columns([5, 1])
+                    with col1:
+                        if link_data.get('description'):
+                            st.markdown(f"🔗 {link_data['url'][:40]}{'...' if len(link_data['url']) > 40 else ''}")
+                            st.caption(f"📝 {link_data['description']}")
+                        else:
+                            st.markdown(f"🔗 {link_data['url'][:40]}{'...' if len(link_data['url']) > 40 else ''}")
+                            st.caption("*No description*")
+                    with col2:
+                        if st.button("🗑️", key=f"remove_link_{i}", help="Remove this link"):
+                            links_to_remove.append(i)
+                
+                # Remove links marked for deletion
+                for i in reversed(links_to_remove):
+                    st.session_state.external_links_data.pop(i)
+                    st.rerun()
+        
+        # Add new link section
+        with st.expander("➕ Add New Link", expanded=len(st.session_state.external_links_data) == 0):
+            # Initialize form tracking if not exists
+            if 'form_counter' not in st.session_state:
+                st.session_state.form_counter = 0
+                
+            # Use form to handle input clearing properly
+            with st.form(key=f"add_link_form_{st.session_state.form_counter}"):
+                new_url = st.text_input(
+                    "URL",
+                    placeholder="https://example.com",
+                    help="Enter the full URL including https://"
+                )
+                
+                new_description = st.text_input(
+                    "Description (Optional)",
+                    placeholder="Brief description of what this link covers",
+                    help="Optional description to help AI place the link contextually"
+                )
+                
+                col1, col2 = st.columns([2, 1])
+                with col1:
+                    submitted = st.form_submit_button("➕ Add Link", use_container_width=True, type="primary")
+                    
+                    if submitted:
+                        if new_url.strip():
+                            # Validate URL
+                            if validate_url(new_url.strip()):
+                                new_link = {
+                                    'url': new_url.strip(),
+                                    'description': new_description.strip() if new_description.strip() else None
+                                }
+                                st.session_state.external_links_data.append(new_link)
+                                # Increment form counter to create new form with cleared inputs
+                                st.session_state.form_counter += 1
+                                st.rerun()
+                            else:
+                                st.error("❌ Please enter a valid URL starting with https://")
+                        else:
+                            st.error("❌ Please enter a URL")
+                
+        
+        # Clear all links button (outside the form)
+        if st.session_state.external_links_data:
+            if st.button("🧹 Clear All Links", use_container_width=True, help="Remove all added links"):
+                st.session_state.external_links_data = []
+                st.rerun()
+        
+        # Convert to old format for compatibility with existing code
+        external_links = ""
+        for link_data in st.session_state.external_links_data:
+            if link_data.get('description'):
+                external_links += f"{link_data['url']} - {link_data['description']}\n"
+            else:
+                external_links += f"{link_data['url']}\n"
+        external_links = external_links.strip()
     
     # Configuration Summary
     with st.sidebar.container():
@@ -244,7 +324,7 @@ def create_sidebar():
         # Calculate dynamic metrics
         url_count = len([url.strip() for url in (url_input or '').split('\n') if url.strip()]) if url_input else 0
         keyword_count = len([k.strip() for k in keywords.split('\n') if k.strip()]) if keywords else 0
-        external_link_count = len([link.strip() for link in external_links.split('\n') if link.strip()]) if external_links else 0
+        external_link_count = len(st.session_state.external_links_data) if 'external_links_data' in st.session_state else 0
         
         st.markdown(f"""
         <div style="background-color: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">

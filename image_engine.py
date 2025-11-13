@@ -892,7 +892,7 @@ class ImageEngine:
                 'prompt': prompt,
                 'size': self.seedream_size,
                 'response_format': 'url',
-                'watermark': True
+                'watermark': False
             }
             
             # Use longer timeout and handle specific timeout types

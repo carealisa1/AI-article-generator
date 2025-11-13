@@ -218,10 +218,27 @@ class LLMEngine:
 
 Use crypto slang naturally: HODL, diamond hands, moon, rugpull, ape in, degens, DYOR, "few understand", "not financial advice".
 Be conversational and engaging while maintaining expertise.
-Maintain the overall {tone.lower()} structure while applying crypto personality."""
+Maintain the overall {tone.lower()} structure while applying crypto personality.
+
+WRITING NATURALNESS REQUIREMENTS:
+- Write like a human crypto expert, not an AI - use natural flow and authentic voice
+- Avoid robotic, overly formal, or template-like language
+- Use contractions (it's, we're, that's) and casual connector words (well, actually, honestly)
+- Vary sentence structure - mix short punchy statements with longer explanatory ones
+- Include natural transitions and conversational bridges between ideas
+- Sound like you're explaining to a friend who knows crypto, not lecturing
+- Use crypto community insider language naturally, not forced
+- Write with personality and opinion, not just dry facts"""
         else:
             # Standard personality for non-crypto content based on selected tone
-            personality = f"""You are an expert content writer. {tone_profile['personality']}"""
+            personality = f"""You are an expert content writer. {tone_profile['personality']}
+
+WRITING NATURALNESS REQUIREMENTS:
+- Write like a human expert, not an AI - use natural flow and authentic voice
+- Avoid robotic, overly formal, or template-like language
+- Use contractions and casual connector words where appropriate for the tone
+- Vary sentence structure and include natural transitions between ideas
+- Write with personality while maintaining professionalism"""
 
         return f"""{personality}
 
@@ -229,7 +246,6 @@ CRITICAL ORIGINAL WRITING REQUIREMENTS:
 - Write original content using source material as factual foundation
 - Maintain ALL factual accuracy (numbers, dates, prices, statistics, company names)
 - Keep ALL numerical data and quotes UNCHANGED from source
-- Keep meta description 100% EXACTLY the same as original - no changes whatsoever
 - Create engaging, natural headings (avoid "topic", "general topic", placeholder language)
 - Write as if creating original analysis, not transforming existing content
 - Use specific, confident language about the subject matter
@@ -238,7 +254,21 @@ CRITICAL ORIGINAL WRITING REQUIREMENTS:
 - No artificial labels like "Title:", "Meta:", etc.
 - STRICT RULE: Follow the exact number of sections requested - count carefully before finishing
 
-FORBIDDEN: Using placeholder language, copying sentence structures, changing factual data, exceeding the requested section count."""
+SEO TITLE & META REQUIREMENTS:
+- Title: Include focus keyword early, make it click-worthy for crypto readers, keep similar to original but optimized
+- Meta Description: Include focus keyword, use crypto-friendly language, compelling call-to-action, stay close to original tone
+- Both should sound natural and appealing to cryptocurrency enthusiasts
+
+HUMAN-LIKE WRITING STYLE:
+- Write naturally and conversationally - sound like a real person, not an AI
+- Use varied sentence lengths and natural rhythm
+- Include authentic crypto community voice and perspective
+- Avoid formulaic or template-like phrasing
+- Write with genuine enthusiasm and insider knowledge
+- Use natural transitions and connective language
+- Sound confident and knowledgeable without being stiff or robotic
+
+FORBIDDEN: Using placeholder language, copying sentence structures, changing factual data, exceeding the requested section count, robotic/AI-like phrasing."""
 
     def _build_draft_prompt(
         self, 
@@ -312,6 +342,13 @@ FORBIDDEN: Using placeholder language, copying sentence structures, changing fac
         - FORCE integration - find appropriate places for ALL links
         - You have {len(links)} links and must use all {len(links)} of them
         - Creative placement is required - make them fit naturally but USE ALL
+        
+        ANCHOR TEXT REQUIREMENTS:
+        - Use descriptive, contextually relevant anchor text for each link
+        - Anchor text should naturally describe what users will find when clicking
+        - Make anchor text fit seamlessly into the sentence structure
+        - Each anchor text should appear only once in the article
+        - Prioritize readability and natural flow while ensuring all links are integrated
         """
         
         # Create promotional integration strategy using client-specific templates
@@ -455,11 +492,13 @@ STOP after {sections} sections. Do not add extra sections beyond this limit.
             
             # Extract title (first line)
             lines = cleaned_content.split('\n')
-            title = lines[0].strip() if lines else "Generated Article"
+            raw_title = lines[0].strip() if lines else "Generated Article"
+            
+            # Optimize title for SEO while preserving original essence
+            title = self._optimize_title_for_seo(raw_title, keywords)
             
             # Extract meta description (second non-empty line that looks like meta description)
-            # PRESERVE EXACTLY as it appears in source - no truncation or modification
-            meta_description = ""
+            raw_meta_description = ""
             for i, line in enumerate(lines[1:], 1):
                 line = line.strip()
                 if (line and 
@@ -467,13 +506,15 @@ STOP after {sections} sections. Do not add extra sections beyond this limit.
                     len(line) < 500 and  # Increased limit to preserve full original
                     not line.startswith('#') and
                     not line.lower().startswith(('title:', 'meta:', 'description:'))):
-                    meta_description = line  # Keep exactly as is - no [:160] truncation
+                    raw_meta_description = line
                     break
             
-            # Fallback meta description only if no original found
-            if not meta_description:
+            # Optimize meta description for SEO while preserving original essence
+            if raw_meta_description:
+                meta_description = self._optimize_meta_description_for_seo(raw_meta_description, keywords)
+            else:
                 if keywords:
-                    meta_description = f"Comprehensive analysis of {keywords[0]} and its impact. Explore key insights, trends, and implications in this detailed guide."
+                    meta_description = f"{keywords[0]} analysis: Comprehensive insights into market trends, price movements, and key developments. Discover what crypto experts are saying about {keywords[0]} potential."
                 else:
                     meta_description = "Discover key insights and analysis in this comprehensive guide covering important trends and developments."
             
@@ -566,7 +607,7 @@ STOP after {sections} sections. Do not add extra sections beyond this limit.
                 'title': title,
                 'seo_title': title,
                 'meta_description': meta_description,
-                'slug': self._generate_slug(title),
+                'slug': self._generate_slug(title, keywords),
                 'sections': sections,
                 'cta': self._generate_cta(title, keywords),
                 'total_word_count': total_words,
@@ -580,8 +621,64 @@ STOP after {sections} sections. Do not add extra sections beyond this limit.
             print(f"Content parsing failed: {e}")
             return self._generate_fallback_content(keywords, language, tone)
     
-    def _generate_slug(self, title: str) -> str:
-        """Generate URL-friendly slug from title"""
+    def _optimize_title_for_seo(self, raw_title: str, keywords: List[str]) -> str:
+        """Optimize title for SEO while preserving original essence"""
+        
+        if not keywords or not keywords[0]:
+            return raw_title
+        
+        primary_keyword = keywords[0]
+        title_lower = raw_title.lower()
+        keyword_lower = primary_keyword.lower()
+        
+        # If keyword is already at the beginning, keep as is
+        if title_lower.startswith(keyword_lower):
+            return raw_title
+        
+        # If keyword exists in title but not at beginning, try to move it forward
+        if keyword_lower in title_lower:
+            # Keep original title structure but ensure keyword prominence
+            return raw_title
+        
+        # If keyword not in title, add it naturally at the beginning
+        if len(raw_title) > 0:
+            # Check if we can naturally prepend the keyword
+            if raw_title[0].isupper():  # Title case
+                return f"{primary_keyword}: {raw_title}"
+            else:
+                return f"{primary_keyword} - {raw_title}"
+        
+        return raw_title
+    
+    def _optimize_meta_description_for_seo(self, raw_meta: str, keywords: List[str]) -> str:
+        """Optimize meta description for SEO while preserving original essence"""
+        
+        if not keywords or not keywords[0]:
+            return raw_meta[:160]  # Standard meta length
+        
+        primary_keyword = keywords[0]
+        meta_lower = raw_meta.lower()
+        keyword_lower = primary_keyword.lower()
+        
+        # If keyword is already early in meta, keep as is but optimize length
+        if keyword_lower in meta_lower[:50]:
+            return raw_meta[:160]
+        
+        # If keyword exists later in meta, try to restructure
+        if keyword_lower in meta_lower:
+            # Keep original but ensure it's not too long
+            return raw_meta[:160]
+        
+        # If keyword not in meta, add it naturally at the beginning
+        if len(raw_meta) > 0:
+            # Prepend keyword naturally
+            optimized = f"{primary_keyword}: {raw_meta}"
+            return optimized[:160]
+        
+        return raw_meta[:160]
+    
+    def _generate_slug(self, title: str, keywords: List[str] = None) -> str:
+        """Generate SEO-optimized URL-friendly slug from title"""
         
         slug = title.lower()
         slug = re.sub(r'[^a-z0-9\s-]', '', slug)
@@ -589,7 +686,13 @@ STOP after {sections} sections. Do not add extra sections beyond this limit.
         slug = re.sub(r'-+', '-', slug)
         slug = slug.strip('-')
         
-        return slug[:50] if len(slug) > 50 else slug
+        # Ensure primary keyword is in slug if not already present
+        if keywords and keywords[0]:
+            primary_keyword = keywords[0].lower().replace(' ', '-')
+            if primary_keyword not in slug and len(slug) < 40:
+                slug = f"{primary_keyword}-{slug}"
+        
+        return slug[:60] if len(slug) > 60 else slug
     
     def _generate_cta(self, title: str, keywords: List[str]) -> str:
         """Generate a relevant call-to-action"""
@@ -636,23 +739,32 @@ Your task is to intelligently place links within existing content using appropri
 
 CRITICAL REQUIREMENTS:
 1. Preserve ALL existing content structure, formatting, and quality
-2. Only integrate links where they add genuine value to readers
-3. Use natural, contextual anchor text that fits seamlessly into sentences
-4. Maintain article flow and readability
-5. Return the complete article with links integrated in HTML format
-6. Do not remove or significantly alter existing content
-7. Place links strategically where they support or enhance the content being discussed
+2. MANDATORY: Insert ALL provided links with their specified anchor text
+3. Use the EXACT anchor text provided for each link - do not modify it
+4. Each anchor text should appear ONLY ONCE in the entire article
+5. Place links strategically where the anchor text fits naturally in context
+6. Maintain article flow and readability
+7. Return the complete article with links integrated in HTML format
+8. Do not remove or significantly alter existing content
+9. If anchor text doesn't exist in article, find the most relevant sentence and naturally incorporate the anchor text
 
-LINK INTEGRATION GUIDELINES:
-- Use descriptive anchor text that clearly indicates what the link is about
-- Integrate links within relevant paragraphs and sentences
-- Avoid cramming multiple links in one sentence
-- Ensure links feel natural and not forced
-- Maintain the professional tone and quality of the original content
-- ALWAYS use target="_blank" attribute to open links in new tabs
+INTERNAL LINK INTEGRATION RULES:
+- Use EXACT anchor text provided (e.g., "best altcoins" must remain "best altcoins")
+- Find contextually relevant paragraphs where anchor text fits naturally
+- If exact anchor text doesn't exist, intelligently incorporate it into a relevant sentence
+- Each link should appear exactly once per article
+- Use HTML format: <a href="URL" target="_blank">exact anchor text</a>
+- ALWAYS include target="_blank" to open links in new tabs
+- Ensure the integration feels natural and adds value to readers
+
+LINK PLACEMENT STRATEGY:
+- Look for sentences discussing related topics to the anchor text
+- Integrate anchor text as naturally as possible within existing content
+- If no perfect match exists, modify a sentence slightly to include the anchor text naturally
+- Prioritize readability and natural flow over forced placement
 
 OUTPUT FORMAT:
-Return the complete article content with links integrated using HTML <a href="URL" target="_blank">anchor text</a> format. ALWAYS include target="_blank" to ensure links open in new browser tabs."""
+Return the complete article content with links integrated using HTML <a href="URL" target="_blank">exact anchor text</a> format. ALWAYS include target="_blank" to ensure links open in new browser tabs."""
                     },
                     {"role": "user", "content": prompt}
                 ]
